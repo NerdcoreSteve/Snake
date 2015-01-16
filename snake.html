@@ -4,43 +4,29 @@
         <link rel="stylesheet" type="text/css" href="snake.css">
     </head>
     <body>
-        <canvas id="canvas" width="900" height="600"></canvas>
+        <canvas id="canvas" width = 900 height = 600></canvas>
         <script>
             canvas = document.getElementById("canvas");
+            canvas.color = "#d3e3a8";
             context = canvas.getContext("2d");
 
-            //TODO no freezing objects, just be disciplined enough not to change state.
-            //TODO should this be game_state(data) ?
-            //     maybe have a default immutable object to go back on if 
-            //     some value for data is unavailable?
-            //TODO should this just be one (only as big as absolutely needed)
-            //     data structure that gets copied/modified with every call?
-            function new_snake(x, y) {
-                return {x: x, y: y};
-            }
+            last_time = new Date().getTime();
 
-            //TODO give it a config object, none of this multiple parameters stuff
-            snake = new_snake(0, 0);
+            snake = {x: 0, y: 0, width: canvas.width/20, speed: 100/canvas.width, color: "#000000"};
 
-            //TODO shouldn't these commented sections be their own functions?
-            //TODO should do this by (function () {})();
-            function draw_next_frame() {
-                //paint over previous frame
-                context.fillStyle="#d3e3a8";
-                context.fillRect(0, 0, 900, 600);
+            (function draw_next_frame() {
+                context.fillStyle = canvas.color;
+                context.fillRect(0, 0, canvas.width, canvas.height);
 
-                //draw snake
-                context.fillStyle="#000000";
-                console.log(snake.x + " " + snake.y);
-                context.fillRect(snake.x + 0, snake.y + 0, 40, 40);
+                context.fillStyle = snake.color;
+                context.fillRect(snake.x, snake.y, snake.width, snake.width);
 
-                //TODO can I avoid this kind of side-effecting?, maybe by making it a parameter
-                //move snake
-                snake.x++;
+                time = new Date().getTime();
+                snake.x += (time - last_time)*snake.speed;
+                last_time = time;
 
                 requestAnimationFrame(draw_next_frame);
-            }
-            draw_next_frame();
+            })();
         </script>
     </body>
 </html>
