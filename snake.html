@@ -8,7 +8,39 @@
         <script>
             canvas = document.getElementById("canvas");
             context = canvas.getContext("2d");
-            context.fillRect(0, 0, 40, 40);
+
+            //TODO no freezing objects, just be disciplined enough not to change state.
+            //TODO should this be game_state(data) ?
+            //     maybe have a default immutable object to go back on if 
+            //     some value for data is unavailable?
+            //TODO should this just be one (only as big as absolutely needed)
+            //     data structure that gets copied/modified with every call?
+            function new_snake(x, y) {
+                return {x: x, y: y};
+            }
+
+            //TODO give it a config object, none of this multiple parameters stuff
+            snake = new_snake(0, 0);
+
+            //TODO shouldn't these commented sections be their own functions?
+            //TODO should do this by (function () {})();
+            function draw_next_frame() {
+                //paint over previous frame
+                context.fillStyle="#d3e3a8";
+                context.fillRect(0, 0, 900, 600);
+
+                //draw snake
+                context.fillStyle="#000000";
+                console.log(snake.x + " " + snake.y);
+                context.fillRect(snake.x + 0, snake.y + 0, 40, 40);
+
+                //TODO can I avoid this kind of side-effecting?, maybe by making it a parameter
+                //move snake
+                snake.x++;
+
+                requestAnimationFrame(draw_next_frame);
+            }
+            draw_next_frame();
         </script>
     </body>
 </html>
