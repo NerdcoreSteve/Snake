@@ -11,7 +11,7 @@ start_time = new Date().getTime();
 
 snake = {x:         0, 
          y:         0, 
-         direction: "down",
+         direction: "right",
          width:     canvas.width / 30,
          speed:     200 / canvas.width,
          color:     colors.snake};
