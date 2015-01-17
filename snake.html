@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Snake</title>
         <link rel="stylesheet" type="text/css" href="snake.css">
     </head>
     <body>
@@ -10,9 +11,12 @@
             canvas.color = "#d3e3a8";
             context = canvas.getContext("2d");
 
+            context.canvas.width  = window.innerWidth;
+            context.canvas.height = window.innerHeight;
+
             last_time = new Date().getTime();
 
-            snake = {x: 0, y: 0, width: canvas.width/20, speed: 100/canvas.width, color: "#000000"};
+            snake = {x: 0, y: 0, width: canvas.width/30, speed: 200/canvas.width, color: "#000000"};
 
             (function draw_next_frame() {
                 context.fillStyle = canvas.color;
