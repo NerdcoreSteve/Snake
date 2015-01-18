@@ -10,27 +10,37 @@ context.canvas.height = window.innerHeight;
 move_buffer = [];
 start_time = new Date().getTime();
 
-
-wall_block_width = canvas.width / 30;
-wall_block_height = canvas.height / 30;
 wall_blocks = [];
-for(i = 0; i < canvas.width/wall_block_width; i++) {
-    wall_blocks.push({x:         i * (wall_block_width), 
+number_of_top_blocks = 30;
+wall_block_width = canvas.width / number_of_top_blocks;
+number_of_side_blocks = 15;
+wall_block_height = canvas.height / number_of_side_blocks;
+//TODO why are there gaps along the side walls but not the top and bottom?
+//TODO I'd love to use underscore's clone function right about now
+for(i = 0; i < number_of_top_blocks; i++) {
+    wall_blocks.push({x:         i * wall_block_width, 
                       y:         0, 
                       width:     wall_block_width,
                       height:    wall_block_height,
                       color:     colors.wall});
 }
-for(i = 0; i < canvas.width/wall_block_width; i++) {
-    wall_blocks.push({x:         i * (wall_block_width), 
-                      y:         canvas.height - wall_block_width, 
+for(i = 0; i < number_of_top_blocks; i++) {
+    wall_blocks.push({x:         i * wall_block_width, 
+                      y:         canvas.height - wall_block_height, 
                       width:     wall_block_width,
                       height:    wall_block_height,
                       color:     colors.wall});
 }
-for(i = 1; i < canvas.height/wall_block_height - 2; i++) {
+for(i = 1; i < canvas.height/wall_block_height - 1; i++) {
     wall_blocks.push({x:         0, 
-                      y:         i * (wall_block_height), 
+                      y:         i * wall_block_height, 
+                      width:     wall_block_width,
+                      height:    wall_block_height,
+                      color:     colors.wall});
+}
+for(i = 1; i < canvas.height/wall_block_height - 1; i++) {
+    wall_blocks.push({x:         canvas.width - wall_block_width, 
+                      y:         i * wall_block_height, 
                       width:     wall_block_width,
                       height:    wall_block_height,
                       color:     colors.wall});
