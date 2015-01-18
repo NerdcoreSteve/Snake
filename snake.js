@@ -1,5 +1,6 @@
 colors = {canvas: "#d3e3a8",
-          snake:  "#000000"};
+          snake:  "#000000",
+          wall:   "#9b0992"};
 
 canvas = document.getElementById("canvas");
 context = canvas.getContext("2d");
@@ -9,16 +10,49 @@ context.canvas.height = window.innerHeight;
 move_buffer = [];
 start_time = new Date().getTime();
 
-snake = {x:         0, 
-         y:         0, 
+
+wall_block_width = canvas.width / 30;
+wall_block_height = canvas.height / 30;
+wall_blocks = [];
+for(i = 0; i < canvas.width/wall_block_width; i++) {
+    wall_blocks.push({x:         i * (wall_block_width), 
+                      y:         0, 
+                      width:     wall_block_width,
+                      height:    wall_block_height,
+                      color:     colors.wall});
+}
+for(i = 0; i < canvas.width/wall_block_width; i++) {
+    wall_blocks.push({x:         i * (wall_block_width), 
+                      y:         canvas.height - wall_block_width, 
+                      width:     wall_block_width,
+                      height:    wall_block_height,
+                      color:     colors.wall});
+}
+for(i = 1; i < canvas.height/wall_block_height - 2; i++) {
+    wall_blocks.push({x:         0, 
+                      y:         i * (wall_block_height), 
+                      width:     wall_block_width,
+                      height:    wall_block_height,
+                      color:     colors.wall});
+}
+
+snake = {x:         canvas.width  / 2, 
+         y:         canvas.height / 2, 
          direction: "right",
-         width:     canvas.width / 30,
+         width:     canvas.width / 40,
          speed:     200 / canvas.width,
          color:     colors.snake};
 
 function blank_out_canvas() {
     context.fillStyle = colors.canvas;
     context.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function draw_wall() {
+    wall_blocks.forEach(function(wall_block) {
+        context.fillStyle = wall_block.color;
+        context.fillRect(wall_block.x, wall_block.y, wall_block.width, wall_block.height);
+    });
 }
 
 function move_snake_segment(time) {
@@ -61,6 +95,7 @@ function draw_snake() {
 
 (function draw_next_frame() {
     blank_out_canvas();
+    draw_wall();
     move_snake();
     draw_snake();
     requestAnimationFrame(draw_next_frame);
