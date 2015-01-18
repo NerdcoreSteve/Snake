@@ -2,6 +2,9 @@ colors = {canvas: "#d3e3a8",
           snake:  "#000000",
           wall:   "#9b0992"};
 
+number_of_top_blocks  = 30;
+number_of_side_blocks = 15;
+
 canvas = document.getElementById("canvas");
 context = canvas.getContext("2d");
 context.canvas.width  = window.innerWidth;
@@ -11,45 +14,35 @@ move_buffer = [];
 start_time = new Date().getTime();
 
 wall_blocks = [];
-number_of_top_blocks = 30;
 wall_block_width = canvas.width / number_of_top_blocks;
-number_of_side_blocks = 15;
 wall_block_height = canvas.height / number_of_side_blocks;
-//TODO why are there gaps along the side walls but not the top and bottom?
-//TODO I'd love to use underscore's clone function right about now
+
+function create_wall_block(x, y) {
+    return {x:         x, 
+            y:         y, 
+            width:     wall_block_width,
+            height:    wall_block_height,
+            color:     colors.wall};
+}
+
 for(i = 0; i < number_of_top_blocks; i++) {
-    wall_blocks.push({x:         i * wall_block_width, 
-                      y:         0, 
-                      width:     wall_block_width,
-                      height:    wall_block_height,
-                      color:     colors.wall});
+    wall_blocks.push(create_wall_block(i * wall_block_width, 0))
 }
 for(i = 0; i < number_of_top_blocks; i++) {
-    wall_blocks.push({x:         i * wall_block_width, 
-                      y:         canvas.height - wall_block_height, 
-                      width:     wall_block_width,
-                      height:    wall_block_height,
-                      color:     colors.wall});
+    wall_blocks.push(create_wall_block(i * wall_block_width, canvas.height - wall_block_height));
 }
 for(i = 1; i < canvas.height/wall_block_height - 1; i++) {
-    wall_blocks.push({x:         0, 
-                      y:         i * wall_block_height, 
-                      width:     wall_block_width,
-                      height:    wall_block_height,
-                      color:     colors.wall});
+    wall_blocks.push(create_wall_block(0, i * wall_block_height));
 }
 for(i = 1; i < canvas.height/wall_block_height - 1; i++) {
-    wall_blocks.push({x:         canvas.width - wall_block_width, 
-                      y:         i * wall_block_height, 
-                      width:     wall_block_width,
-                      height:    wall_block_height,
-                      color:     colors.wall});
+    wall_blocks.push(create_wall_block(canvas.width - wall_block_width, i * wall_block_height));
 }
 
 snake = {x:         canvas.width  / 2, 
          y:         canvas.height / 2, 
          direction: "right",
          width:     canvas.width / 40,
+         height:    canvas.width / 40,
          speed:     200 / canvas.width,
          color:     colors.snake};
 
@@ -65,6 +58,10 @@ function draw_wall() {
     });
 }
 
+function collision(block1, block2) {
+    return false;
+}
+
 function move_snake_segment(time) {
     traversed_distance = (time - start_time) * snake.speed;
     if(snake.direction == "up") {
@@ -76,6 +73,19 @@ function move_snake_segment(time) {
     } else if(snake.direction == "right") {
         snake.x += traversed_distance;
     }
+
+    wall_blocks.forEach(function(wall_block) {
+        if(collision(snake, wall_block)) {
+            snake = {x:         canvas.width  / 2, 
+                     y:         canvas.height / 2, 
+                     direction: "right",
+                     width:     canvas.width / 40,
+                     height:    canvas.width / 40,
+                     speed:     200 / canvas.width,
+                     color:     colors.snake};
+        }
+    });
+
     start_time = time;
 }
 
