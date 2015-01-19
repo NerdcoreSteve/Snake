@@ -5,6 +5,7 @@ colors = {canvas:       "#d3e3a8",
 
 number_of_top_blocks  = 30;
 number_of_side_blocks = 15;
+edible_block_minimum_distance_in_fraction_of_canvas_height = 0.1;
 
 canvas = document.getElementById("canvas");
 context = canvas.getContext("2d");
@@ -17,6 +18,12 @@ start_time = new Date().getTime();
 wall_blocks = [];
 wall_block_width = canvas.width / number_of_top_blocks;
 wall_block_height = canvas.height / number_of_side_blocks;
+
+function random_number(begining_of_range_inclusive, end_of_range_inclusive) {
+    return Math.floor((Math.random()
+        * (end_of_range_inclusive - begining_of_range_inclusive + 1)) 
+        + begining_of_range_inclusive);
+}
 
 function get_coordinates(block) {
     return {upper_left:  {x: block.x              , y: block.y               },
@@ -33,18 +40,28 @@ function create_wall_block(x, y) {
             color:     colors.wall};
 }
 
-for(i = 0; i < number_of_top_blocks; i++) {
-    wall_blocks.push(create_wall_block(i * wall_block_width, 0))
+function create_wall(start, end, x_function, y_function) {
+    for(i = start; i < end; i++) {
+        wall_blocks.push(create_wall_block(x_function(i), y_function(i)));
+    }
 }
-for(i = 0; i < number_of_top_blocks; i++) {
-    wall_blocks.push(create_wall_block(i * wall_block_width, canvas.height - wall_block_height));
-}
-for(i = 1; i < canvas.height/wall_block_height - 1; i++) {
-    wall_blocks.push(create_wall_block(0, i * wall_block_height));
-}
-for(i = 1; i < canvas.height/wall_block_height - 1; i++) {
-    wall_blocks.push(create_wall_block(canvas.width - wall_block_width, i * wall_block_height));
-}
+
+create_wall(0,
+            number_of_top_blocks,
+            function(i) { return i * wall_block_width},
+            function(i) { return 0 });
+create_wall(0,
+            number_of_top_blocks,
+            function(i) { return i * wall_block_width},
+            function(i) { return canvas.height - wall_block_height });
+create_wall(1,
+            canvas.height/wall_block_height - 1,
+            function(i) { return 0},
+            function(i) { return i * wall_block_height });
+create_wall(1,
+            canvas.height/wall_block_height - 1,
+            function(i) { return canvas.width - wall_block_width},
+            function(i) { return i * wall_block_height });
 
 snake = {x:         canvas.width  / 2, 
          y:         canvas.height / 2, 
@@ -54,11 +71,25 @@ snake = {x:         canvas.width  / 2,
          speed:     200 / canvas.width,
          color:     colors.snake};
 
-edible_block = {x:         canvas.width  / 4, 
-                y:         canvas.height / 4, 
-                width:     canvas.width / 40,
-                height:    canvas.width / 40,
-                color:     colors.edible_block};
+function create_edible_block() {
+    minimum_distance = edible_block_minimum_distance_in_fraction_of_canvas_height * canvas.height;
+    width_height = canvas.width / 40;
+    return {x:         random_number(wall_block_width + minimum_distance,
+                                     canvas.width
+                                     - wall_block_width
+                                     - width_height
+                                     - minimum_distance),
+            y:         random_number(wall_block_height + minimum_distance,
+                                     canvas.height
+                                     - wall_block_height
+                                     - width_height
+                                     - minimum_distance),
+            width:     width_height,
+            height:    width_height,
+            color:     colors.edible_block};
+}
+
+edible_block = create_edible_block();
 
 function blank_out_canvas() {
     context.fillStyle = colors.canvas;
@@ -100,6 +131,17 @@ function move_snake_segment(time) {
     start_time = time;
 }
 
+function restart_game() {
+    edible_block = create_edible_block();
+    snake = {x:         canvas.width  / 2, 
+             y:         canvas.height / 2, 
+             direction: "right",
+             width:     canvas.width / 40,
+             height:    canvas.width / 40,
+             speed:     200 / canvas.width,
+             color:     colors.snake};
+}
+
 function move_snake() {
     opposite = {"left" : "right",
                 "right": "left",
@@ -119,13 +161,7 @@ function move_snake() {
     }
     wall_blocks.forEach(function(wall_block) {
         if(collision(snake, wall_block)) {
-            snake = {x:         canvas.width  / 2, 
-                     y:         canvas.height / 2, 
-                     direction: "right",
-                     width:     canvas.width / 40,
-                     height:    canvas.width / 40,
-                     speed:     200 / canvas.width,
-                     color:     colors.snake};
+            restart_game();
         }
     });
 }
