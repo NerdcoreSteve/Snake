@@ -1,6 +1,7 @@
-colors = {canvas: "#d3e3a8",
-          snake:  "#000000",
-          wall:   "#9b0992"};
+colors = {canvas:       "#d3e3a8",
+          snake:        "#000000",
+          wall:         "#9b0992",
+          edible_block: "#f84a14"};
 
 number_of_top_blocks  = 30;
 number_of_side_blocks = 15;
@@ -52,6 +53,12 @@ snake = {x:         canvas.width  / 2,
          height:    canvas.width / 40,
          speed:     200 / canvas.width,
          color:     colors.snake};
+
+edible_block = {x:         canvas.width  / 4, 
+                y:         canvas.height / 4, 
+                width:     canvas.width / 40,
+                height:    canvas.width / 40,
+                color:     colors.edible_block};
 
 function blank_out_canvas() {
     context.fillStyle = colors.canvas;
@@ -128,9 +135,15 @@ function draw_snake() {
     context.fillRect(snake.x, snake.y, snake.width, snake.width);
 }
 
+function draw_edible_block() {
+    context.fillStyle = edible_block.color;
+    context.fillRect(edible_block.x, edible_block.y, edible_block.width, edible_block.width);
+}
+
 (function draw_next_frame() {
     blank_out_canvas();
     draw_wall();
+    draw_edible_block();
     move_snake();
     draw_snake();
     requestAnimationFrame(draw_next_frame);
