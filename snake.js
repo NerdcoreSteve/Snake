@@ -17,6 +17,13 @@ wall_blocks = [];
 wall_block_width = canvas.width / number_of_top_blocks;
 wall_block_height = canvas.height / number_of_side_blocks;
 
+function get_coordinates(block) {
+    return {upper_left:  {x: block.x              , y: block.y               },
+            upper_right: {x: block.x + block.width, y: block.y               },
+            lower_left:  {x: block.x              , y: block.y +  block.width},
+            lower_right: {x: block.x + block.width, y: block.y +  block.width}};
+}
+
 function create_wall_block(x, y) {
     return {x:         x, 
             y:         y, 
@@ -59,6 +66,16 @@ function draw_wall() {
 }
 
 function collision(block1, block2) {
+    block1_coordinates = get_coordinates(block1);
+    block2_coordinates = get_coordinates(block2);
+    for(coordinate in block1_coordinates) {
+        if(block1_coordinates[coordinate].x > block2_coordinates.upper_left.x  &&
+           block1_coordinates[coordinate].x < block2_coordinates.upper_right.x &&
+           block1_coordinates[coordinate].y > block2_coordinates.upper_left.y  &&
+           block1_coordinates[coordinate].y < block2_coordinates.lower_left.y) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -73,19 +90,6 @@ function move_snake_segment(time) {
     } else if(snake.direction == "right") {
         snake.x += traversed_distance;
     }
-
-    wall_blocks.forEach(function(wall_block) {
-        if(collision(snake, wall_block)) {
-            snake = {x:         canvas.width  / 2, 
-                     y:         canvas.height / 2, 
-                     direction: "right",
-                     width:     canvas.width / 40,
-                     height:    canvas.width / 40,
-                     speed:     200 / canvas.width,
-                     color:     colors.snake};
-        }
-    });
-
     start_time = time;
 }
 
@@ -106,6 +110,17 @@ function move_snake() {
         });
         move_buffer = [];
     }
+    wall_blocks.forEach(function(wall_block) {
+        if(collision(snake, wall_block)) {
+            snake = {x:         canvas.width  / 2, 
+                     y:         canvas.height / 2, 
+                     direction: "right",
+                     width:     canvas.width / 40,
+                     height:    canvas.width / 40,
+                     speed:     200 / canvas.width,
+                     color:     colors.snake};
+        }
+    });
 }
 
 function draw_snake() {
