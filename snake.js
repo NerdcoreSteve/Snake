@@ -72,21 +72,34 @@ snake = {x:         canvas.width  / 2,
          color:     colors.snake};
 
 function create_edible_block() {
-    minimum_distance = edible_block_minimum_distance_in_fraction_of_canvas_height * canvas.height;
     width_height = canvas.width / 40;
-    return {x:         random_number(wall_block_width + minimum_distance,
-                                     canvas.width
-                                     - wall_block_width
-                                     - width_height
-                                     - minimum_distance),
-            y:         random_number(wall_block_height + minimum_distance,
-                                     canvas.height
-                                     - wall_block_height
-                                     - width_height
-                                     - minimum_distance),
-            width:     width_height,
-            height:    width_height,
-            color:     colors.edible_block};
+
+    upper_left_x  = wall_block_width;
+    upper_left_y  = wall_block_width;
+    lower_right_x = canvas.width  - wall_block_width  - width_height;
+    lower_right_y = canvas.height - wall_block_height - width_height;
+
+    //TODO should be calculated with a function that takes a fraction
+    //     use width or height, whichever is shortest
+    minimum_distance = edible_block_minimum_distance_in_fraction_of_canvas_height * canvas.height;
+
+    x = 0;
+    y = 0;
+    good_spot = false;
+    while(!good_spot) {
+        x = random_number(upper_left_x, lower_right_x);
+        y = random_number(upper_left_y, lower_right_y);
+        if(x > upper_left_x + minimum_distance && x < lower_right_x - minimum_distance &&
+           y > upper_left_y + minimum_distance && y < lower_right_y - minimum_distance) {
+            good_spot = true;
+        }
+    }
+
+    return {x:      x,
+            y:      y,
+            width:  width_height,
+            height: width_height,
+            color:  colors.edible_block};
 }
 
 edible_block = create_edible_block();
@@ -159,6 +172,11 @@ function move_snake() {
         });
         move_buffer = [];
     }
+
+    if(collision(edible_block, snake)) {
+        edible_block = create_edible_block();
+    }
+
     wall_blocks.forEach(function(wall_block) {
         if(collision(snake, wall_block)) {
             restart_game();
