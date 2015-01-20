@@ -19,6 +19,8 @@ wall_blocks = [];
 wall_block_width = canvas.width / number_of_top_blocks;
 wall_block_height = canvas.height / number_of_side_blocks;
 
+initial_snake_speed = 200 / canvas.width;
+
 function random_number(begining_of_range_inclusive, end_of_range_inclusive) {
     return Math.floor((Math.random()
         * (end_of_range_inclusive - begining_of_range_inclusive + 1)) 
@@ -63,13 +65,26 @@ create_wall(1,
             function(i) { return canvas.width - wall_block_width},
             function(i) { return i * wall_block_height });
 
-snake = {x:         canvas.width  / 2, 
-         y:         canvas.height / 2, 
-         direction: "right",
-         width:     canvas.width / 40,
-         height:    canvas.width / 40,
-         speed:     200 / canvas.width,
-         color:     colors.snake};
+function create_snake_segment(x, y, direction, width, height, speed, color) {
+    return {x:         x, 
+            y:         y, 
+            direction: direction,
+            width:     width,
+            height:    height,
+            speed:     speed,
+            color:     color};
+}
+
+function create_snake(x, y, direction, head_width, speed, color) {
+    return create_snake_segment(x, y, direction, head_width, head_width, speed, color);
+}
+
+snake = create_snake(canvas.width  / 2,
+                     canvas.height / 2,
+                     "right",
+                     canvas.width / 40,
+                     initial_snake_speed,
+                     colors.snake);
 
 function create_edible_block() {
     width_height = canvas.width / 40;
@@ -148,13 +163,17 @@ function move_snake_segment(time) {
 
 function restart_game() {
     edible_block = create_edible_block();
-    snake = {x:         canvas.width  / 2, 
-             y:         canvas.height / 2, 
-             direction: "right",
-             width:     canvas.width / 40,
-             height:    canvas.width / 40,
-             speed:     200 / canvas.width,
-             color:     colors.snake};
+    snake = create_snake(canvas.width  / 2,
+                         canvas.height / 2,
+                         "right",
+                         canvas.width / 40,
+                         initial_snake_speed,
+                         colors.snake);
+}
+
+function next_level() {
+    edible_block = create_edible_block();
+    snake.speed += 0.1 * initial_snake_speed;
 }
 
 function move_snake() {
@@ -176,7 +195,7 @@ function move_snake() {
     }
 
     if(collision(edible_block, snake)) {
-        edible_block = create_edible_block();
+        next_level();
     }
 
     wall_blocks.forEach(function(wall_block) {
