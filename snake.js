@@ -89,8 +89,10 @@ function create_edible_block() {
     while(!good_spot) {
         x = random_number(upper_left_x, lower_right_x);
         y = random_number(upper_left_y, lower_right_y);
-        if(x > upper_left_x + minimum_distance && x < lower_right_x - minimum_distance &&
-           y > upper_left_y + minimum_distance && y < lower_right_y - minimum_distance) {
+        if(x > upper_left_x + minimum_distance && x < lower_right_x - minimum_distance      &&
+           y > upper_left_y + minimum_distance && y < lower_right_y - minimum_distance      &&
+           (x < snake.x + minimum_distance || x > snake.x + snake.width + minimum_distance) &&
+           (y < snake.y + minimum_distance || y > snake.y + snake.height + minimum_distance)) {
             good_spot = true;
         }
     }
