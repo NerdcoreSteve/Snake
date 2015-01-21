@@ -5,7 +5,7 @@ colors = {canvas:       "#d3e3a8",
 
 number_of_top_blocks  = 30;
 number_of_side_blocks = 15;
-edible_block_minimum_distance_in_fraction_of_canvas_height = 0.1;
+edible_block_minimum_distance_in_fraction_of_canvas_height = 0.3;
 
 canvas = document.getElementById("canvas");
 context = canvas.getContext("2d");
@@ -28,10 +28,10 @@ function random_number(begining_of_range_inclusive, end_of_range_inclusive) {
 }
 
 function get_coordinates(block) {
-    return {upper_left:  {x: block.x              , y: block.y               },
-            upper_right: {x: block.x + block.width, y: block.y               },
-            lower_left:  {x: block.x              , y: block.y +  block.width},
-            lower_right: {x: block.x + block.width, y: block.y +  block.width}};
+    return {upper_left:  {x: block.x              , y: block.y                },
+            upper_right: {x: block.x + block.width, y: block.y                },
+            lower_left:  {x: block.x              , y: block.y +  block.height},
+            lower_right: {x: block.x + block.width, y: block.y +  block.height}};
 }
 
 function create_wall_block(x, y) {
@@ -65,18 +65,22 @@ create_wall(1,
             function(i) { return canvas.width - wall_block_width},
             function(i) { return i * wall_block_height });
 
-function create_snake_segment(x, y, direction, width, height, speed, color) {
+function create_snake_segment(x, y, width, height, direction) {
     return {x:         x, 
             y:         y, 
-            direction: direction,
             width:     width,
-            height:    height,
-            speed:     speed,
-            color:     color};
+            height:    height};
 }
 
 function create_snake(x, y, direction, head_width, speed, color) {
-    return create_snake_segment(x, y, direction, head_width, head_width, speed, color);
+    return {speed: speed,
+            color: color,
+            head_width: head_width,
+            segments: [create_snake_segment(x,
+                                            y,
+                                            head_width * 2,
+                                            head_width,
+                                            direction)]};
 }
 
 snake = create_snake(canvas.width  / 2,
@@ -104,10 +108,12 @@ function create_edible_block() {
     while(!good_spot) {
         x = random_number(upper_left_x, lower_right_x);
         y = random_number(upper_left_y, lower_right_y);
-        if(x > upper_left_x + minimum_distance && x < lower_right_x - minimum_distance      &&
-           y > upper_left_y + minimum_distance && y < lower_right_y - minimum_distance      &&
-           (x < snake.x + minimum_distance || x > snake.x + snake.width + minimum_distance) &&
-           (y < snake.y + minimum_distance || y > snake.y + snake.height + minimum_distance)) {
+        if(x > upper_left_x + minimum_distance && x < lower_right_x - minimum_distance &&
+           y > upper_left_y + minimum_distance && y < lower_right_y - minimum_distance &&
+           (x < snake.segments[0].x + minimum_distance ||
+            x > snake.segments[0].x + snake.segments[0].width + minimum_distance) &&
+           (y < snake.segments[0].y + minimum_distance ||
+            y > snake.segments[0].y + snake.segments[0].height + minimum_distance)) {
             good_spot = true;
         }
     }
@@ -147,20 +153,42 @@ function collision(block1, block2) {
     return false;
 }
 
-function move_snake_segment(time) {
-    traversed_distance = (time - start_time) * snake.speed;
-    if(snake.direction == "up") {
-        snake.y -= traversed_distance;
-    } else if(snake.direction == "down") {
-        snake.y += traversed_distance;
-    } else if(snake.direction == "left") {
-        snake.x -= traversed_distance;
-    } else if(snake.direction == "right") {
-        snake.x += traversed_distance;
+//TODO head_or_tail ought to be an enum
+function move_snake_segment(snake_segment, head_or_tail, speed, time) {
+    traversed_distance = (time - start_time) * speed;
+    if(snake_segment.direction == "up") {
+        if(head_or_tail == "head") {
+            snake_segment.y -= traversed_distance;
+            snake_segment.height += traversed_distance;
+        } else {
+            snake_segment.height -= traversed_distance;
+        }
+    } else if(snake_segment.direction == "down") {
+        if(head_or_tail == "head") {
+            snake_segment.height += traversed_distance;
+        } else {
+            snake_segment.y -= traversed_distance;
+            snake_segment.height -= traversed_distance;
+        }
+    } else if(snake_segment.direction == "left") {
+        if(head_or_tail == "head") {
+            snake_segment.x -= traversed_distance;
+            snake_segment.width += traversed_distance;
+        } else {
+            snake_segment.width -= traversed_distance;
+        }
+    } else if(snake_segment.direction == "right") {
+        if(head_or_tail == "head") {
+            snake_segment.width += traversed_distance;
+        } else {
+            snake_segment.x -= traversed_distance;
+            snake_segment.width -= traversed_distance;
+        }
     }
     start_time = time;
 }
 
+//TODO this function should be called start_game and should be called before the main loop
 function restart_game() {
     edible_block = create_edible_block();
     snake = create_snake(canvas.width  / 2,
@@ -176,6 +204,19 @@ function next_level() {
     snake.speed += 0.1 * initial_snake_speed;
 }
 
+function move_snake_head_and_tail(snake, time) {
+    move_snake_segment(snake.segments[0],
+                       "head",
+                       snake.speed,
+                       time);
+    if(snake.segments.length > 1) {
+        move_snake_segment(snake.segments[snake.segments.length - 1],
+                           "tail",
+                           snake.speed,
+                           time);
+    }
+}
+
 function move_snake() {
     opposite = {"left" : "right",
                 "right": "left",
@@ -183,23 +224,27 @@ function move_snake() {
                 "down" : "up"};
 
     if(move_buffer.length == 0) {
-        move_snake_segment(new Date().getTime());
+        move_snake_head_and_tail(snake, new Date().getTime());
     } else {
         move_buffer.forEach(function(move) {
             if(move.direction != opposite[snake.direction]) {
-                snake.direction = move.direction;
+                snake.segments.unshift(create_snake_segment(snake.segments[0].x,
+                                                            snake.segments[0].y,
+                                                            snake.segments[0].width_height,
+                                                            snake.segments[0].width_height,
+                                                            move.direction));
             }
-            move_snake_segment(move.time);
+            move_snake_head_and_tail(snake, move.time);
         });
         move_buffer = [];
     }
 
-    if(collision(edible_block, snake)) {
+    if(collision(edible_block, snake.segments[0])) {
         next_level();
     }
 
     wall_blocks.forEach(function(wall_block) {
-        if(collision(snake, wall_block)) {
+        if(collision(snake.segments[0], wall_block)) {
             restart_game();
         }
     });
@@ -207,7 +252,9 @@ function move_snake() {
 
 function draw_snake() {
     context.fillStyle = snake.color;
-    context.fillRect(snake.x, snake.y, snake.width, snake.width);
+    snake.segments.forEach(function(segment) {
+        context.fillRect(segment.x, segment.y, segment.width, segment.height);
+    });
 }
 
 function draw_edible_block() {
