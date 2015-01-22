@@ -1,7 +1,7 @@
 colors = {canvas:       "#d3e3a8",
           snake:        "#000000",
-          wall:         "#9b0992",
-          edible_block: "#f84a14"};
+          wall:         "#000000",
+          edible_block: "#000000"};
 
 number_of_top_blocks  = 30;
 number_of_side_blocks = 15;
@@ -155,6 +155,7 @@ function collision(block1, block2) {
 }
 
 //TODO head_or_tail ought to be an enum
+//TODO this is a nasty if-else, can't it be done better?
 function move_snake_segment(snake_segment, head_or_tail, traversed_distance) {
     if(snake_segment.direction == "up") {
         if(head_or_tail == "head") {
@@ -171,12 +172,15 @@ function move_snake_segment(snake_segment, head_or_tail, traversed_distance) {
         } else if(head_or_tail == "both") {
             snake_segment.y += traversed_distance;
         } else {
-            snake_segment.height += traversed_distance;
+            snake_segment.y += traversed_distance;
+            snake_segment.height -= traversed_distance;
         }
     } else if(snake_segment.direction == "left") {
         if(head_or_tail == "head") {
             snake_segment.x -= traversed_distance;
             snake_segment.width += traversed_distance;
+        } else if(head_or_tail == "both") {
+            snake_segment.x -= traversed_distance;
         } else {
             snake_segment.width -= traversed_distance;
         }
@@ -244,6 +248,8 @@ function move_snake() {
             y = snake.segments[0].y;
             if(snake.segments[0].direction == "right") {
                 x = snake.segments[0].x + snake.segments[0].width - snake.head_width;
+            } else if(snake.segments[0].direction == "down") {
+                y = snake.segments[0].y + snake.segments[0].height - snake.head_width;
             }
             snake.segments.unshift(create_snake_segment(x,
                                                         y,
