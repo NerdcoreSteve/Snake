@@ -84,6 +84,15 @@ function create_snake(x, y, direction, head_width, speed, color) {
                                             direction)]};
 }
 
+function collision_with_snake(rectangle) {
+    snake.segments.forEach(function(segment) {
+        if(collision(rectangle, segment)) {
+            return true;
+        }
+    });
+    return false;
+}
+
 snake = create_snake(canvas.width  / 2,
                      canvas.height / 2,
                      "right",
@@ -114,7 +123,8 @@ function create_edible_block() {
            (x < snake.segments[0].x + minimum_distance ||
             x > snake.segments[0].x + snake.segments[0].width + minimum_distance) &&
            (y < snake.segments[0].y + minimum_distance ||
-            y > snake.segments[0].y + snake.segments[0].height + minimum_distance)) {
+            y > snake.segments[0].y + snake.segments[0].height + minimum_distance) &&
+           (!collision_with_snake({x: x, y: y, width: width_height, height: width_height}))) {
             good_spot = true;
         }
     }
@@ -261,7 +271,6 @@ function move_snake() {
     });
     move_buffer = [];
 
-/*
     if(collision(edible_block, snake.segments[0])) {
         next_level();
     }
@@ -271,7 +280,12 @@ function move_snake() {
             restart_game();
         }
     });
-*/
+
+    snake.segments.slice(2).forEach(function(segment) {
+        if(collision(snake.segments[0], segment)) {
+            restart_game();
+        }
+    });
 }
 
 function draw_snake() {
