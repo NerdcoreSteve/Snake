@@ -168,9 +168,10 @@ function move_snake_segment(snake_segment, head_or_tail, traversed_distance) {
     } else if(snake_segment.direction == "down") {
         if(head_or_tail == "head") {
             snake_segment.height += traversed_distance;
+        } else if(head_or_tail == "both") {
+            snake_segment.y += traversed_distance;
         } else {
-            snake_segment.y -= traversed_distance;
-            snake_segment.height -= traversed_distance;
+            snake_segment.height += traversed_distance;
         }
     } else if(snake_segment.direction == "left") {
         if(head_or_tail == "head") {
