@@ -69,7 +69,8 @@ function create_snake_segment(x, y, width, height, direction) {
     return {x:         x, 
             y:         y, 
             width:     width,
-            height:    height};
+            height:    height,
+            direction: direction};
 }
 
 function create_snake(x, y, direction, head_width, speed, color) {
@@ -154,12 +155,13 @@ function collision(block1, block2) {
 }
 
 //TODO head_or_tail ought to be an enum
-function move_snake_segment(snake_segment, head_or_tail, speed, time) {
-    traversed_distance = (time - start_time) * speed;
+function move_snake_segment(snake_segment, head_or_tail, traversed_distance) {
     if(snake_segment.direction == "up") {
         if(head_or_tail == "head") {
             snake_segment.y -= traversed_distance;
             snake_segment.height += traversed_distance;
+        } else if(head_or_tail == "both") {
+            snake_segment.y -= traversed_distance;
         } else {
             snake_segment.height -= traversed_distance;
         }
@@ -180,12 +182,13 @@ function move_snake_segment(snake_segment, head_or_tail, speed, time) {
     } else if(snake_segment.direction == "right") {
         if(head_or_tail == "head") {
             snake_segment.width += traversed_distance;
+        } else if(head_or_tail == "both") {
+            snake_segment.x += traversed_distance;
         } else {
-            snake_segment.x -= traversed_distance;
+            snake_segment.x += traversed_distance;
             snake_segment.width -= traversed_distance;
         }
     }
-    start_time = time;
 }
 
 //TODO this function should be called start_game and should be called before the main loop
@@ -205,16 +208,24 @@ function next_level() {
 }
 
 function move_snake_head_and_tail(snake, time) {
-    move_snake_segment(snake.segments[0],
-                       "head",
-                       snake.speed,
-                       time);
+    traversed_distance = (time - start_time) * snake.speed;
     if(snake.segments.length > 1) {
+        move_snake_segment(snake.segments[0],
+                           "head",
+                           traversed_distance);
         move_snake_segment(snake.segments[snake.segments.length - 1],
                            "tail",
-                           snake.speed,
-                           time);
+                           traversed_distance);
+        if(snake.segments[snake.segments.length - 1].width <= 0 ||
+           snake.segments[snake.segments.length - 1].height <= 0) {
+            snake.segments.pop();
+        }
+    } else {
+        move_snake_segment(snake.segments[0],
+                           "both",
+                           traversed_distance);
     }
+    start_time = time;
 }
 
 function move_snake() {
@@ -223,22 +234,27 @@ function move_snake() {
                 "up"   : "down",
                 "down" : "up"};
 
-    if(move_buffer.length == 0) {
-        move_snake_head_and_tail(snake, new Date().getTime());
-    } else {
-        move_buffer.forEach(function(move) {
-            if(move.direction != opposite[snake.direction]) {
-                snake.segments.unshift(create_snake_segment(snake.segments[0].x,
-                                                            snake.segments[0].y,
-                                                            snake.segments[0].width_height,
-                                                            snake.segments[0].width_height,
-                                                            move.direction));
-            }
-            move_snake_head_and_tail(snake, move.time);
-        });
-        move_buffer = [];
-    }
+    move_buffer.unshift({direction: snake.segments[0].direction, time: new Date().getTime()});
 
+    move_buffer.forEach(function(move) {
+        if(move.direction != opposite[snake.segments[0].direction] &&
+           move.direction != snake.segments[0].direction) {
+            x = snake.segments[0].x;
+            y = snake.segments[0].y;
+            if(snake.segments[0].direction == "right") {
+                x = snake.segments[0].x + snake.segments[0].width - snake.head_width;
+            }
+            snake.segments.unshift(create_snake_segment(x,
+                                                        y,
+                                                        snake.head_width,
+                                                        snake.head_width,
+                                                        move.direction));
+        }
+        move_snake_head_and_tail(snake, move.time);
+    });
+    move_buffer = [];
+
+/*
     if(collision(edible_block, snake.segments[0])) {
         next_level();
     }
@@ -248,6 +264,7 @@ function move_snake() {
             restart_game();
         }
     });
+*/
 }
 
 function draw_snake() {
@@ -274,12 +291,12 @@ function draw_edible_block() {
 window.onkeydown = function(e) {
     e = e || window.event;
     if(e.keyCode == '38') {
-        move_buffer.push({direction: "up", time: new Date().getTime()});
+        move_buffer.unshift({direction: "up", time: new Date().getTime()});
     } else if(e.keyCode == '40') {
-        move_buffer.push({direction: "down", time: new Date().getTime()});
+        move_buffer.unshift({direction: "down", time: new Date().getTime()});
     } else if(e.keyCode == '37') {
-        move_buffer.push({direction: "left", time: new Date().getTime()});
+        move_buffer.unshift({direction: "left", time: new Date().getTime()});
     } else if(e.keyCode == '39') {
-        move_buffer.push({direction: "right", time: new Date().getTime()});
+        move_buffer.unshift({direction: "right", time: new Date().getTime()});
     }
 }
