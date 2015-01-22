@@ -222,8 +222,7 @@ function next_level() {
     snake.speed += 0.1 * initial_snake_speed;
 }
 
-function move_snake_head_and_tail(snake, time) {
-    traversed_distance = (time - start_time) * snake.speed;
+function move_snake_head_and_tail(snake, traversed_distance) {
     if(snake.segments.length > 1) {
         move_snake_segment(snake.segments[0],
                            "head",
@@ -231,8 +230,9 @@ function move_snake_head_and_tail(snake, time) {
         move_snake_segment(snake.segments[snake.segments.length - 1],
                            "tail",
                            traversed_distance);
-        if(snake.segments[snake.segments.length - 1].width <= 0 ||
-           snake.segments[snake.segments.length - 1].height <= 0) {
+        tail_width  = snake.segments[snake.segments.length - 1].width;
+        tail_height = snake.segments[snake.segments.length - 1].height;
+        if(tail_width <= 0 || tail_height <= 0) {
             snake.segments.pop();
         }
     } else {
@@ -240,7 +240,6 @@ function move_snake_head_and_tail(snake, time) {
                            "both",
                            traversed_distance);
     }
-    start_time = time;
 }
 
 function move_snake() {
@@ -267,7 +266,9 @@ function move_snake() {
                                                         snake.head_width,
                                                         move.direction));
         }
-        move_snake_head_and_tail(snake, move.time);
+        traversed_distance = (move.time - start_time) * snake.speed;
+        move_snake_head_and_tail(snake, traversed_distance);
+        start_time = move.time;
     });
     move_buffer = [];
 
