@@ -74,12 +74,14 @@ function create_snake_segment(x, y, width, height, direction) {
 }
 
 function create_snake(x, y, direction, head_width, speed, color) {
+    length = head_width * 2;
     return {speed: speed,
             color: color,
             head_width: head_width,
+            length: length,
             segments: [create_snake_segment(x,
                                             y,
-                                            head_width * 2,
+                                            length,
                                             head_width,
                                             direction)]};
 }
@@ -178,6 +180,7 @@ function restart_game() {
 function next_level() {
     edible_block = create_edible_block();
     snake.speed += 0.1 * initial_snake_speed;
+    snake.length += snake.head_width;
 }
 
 function move_head(snake, distance) {
@@ -195,8 +198,43 @@ function move_head(snake, distance) {
     }
 }
 
-function move_tail(snake, distance) {
+function get_snake_length(snake) {
+    snake_length = 0;
+    snake.segments.forEach(function(segment) {
+        function length(segment) {
+            if(segment.direction == "left" || segment.direction == "right") {
+                return segment.width;
+            } else {
+                return segment.height;
+            }
+        }
+        snake_length += length(segment);
+    });
+    snake_length -= snake.head_width * (snake.segments.length - 1);
+    return snake_length;
+}
+
+function shrink_tail(snake, amount) { 
     snake_tail = snake.segments[snake.segments.length - 1];
+    if(snake_tail.direction == "up") {
+        snake_tail.height -= amount;
+    } else if(snake_tail.direction == "down") {
+        snake_tail.y += amount;
+        snake_tail.height -= amount;
+    } else if(snake_tail.direction == "left") {
+        snake_tail.width -= amount;
+    } else if(snake_tail.direction == "right") {
+        snake_tail.x += amount;
+        snake_tail.width -= amount;
+    }
+    if(snake_tail.width <= 0 || snake_tail.height <= 0) {
+        snake.segments.pop();
+        if(snake_tail.width < 0) {
+            shrink_tail(snake, -1 * snake_tail.width);
+        } else if(snake_tail.height < 0) {
+            shrink_tail(snake, -1 * snake_tail.height);
+        }
+    }
 }
 
 function move_snake() {
@@ -225,7 +263,7 @@ function move_snake() {
         }
         traversed_distance = (move.time - start_time) * snake.speed;
         move_head(snake, traversed_distance);
-        move_tail(snake);
+        shrink_tail(snake, get_snake_length(snake) - snake.length);
         start_time = move.time;
     });
     move_buffer = [];
