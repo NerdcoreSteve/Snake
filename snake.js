@@ -164,48 +164,6 @@ function collision(block1, block2) {
     return false;
 }
 
-//TODO head_or_tail ought to be an enum
-//TODO this is a nasty if-else, can't it be done better?
-function move_snake_segment(snake_segment, head_or_tail, traversed_distance) {
-    if(snake_segment.direction == "up") {
-        if(head_or_tail == "head") {
-            snake_segment.y -= traversed_distance;
-            snake_segment.height += traversed_distance;
-        } else if(head_or_tail == "both") {
-            snake_segment.y -= traversed_distance;
-        } else {
-            snake_segment.height -= traversed_distance;
-        }
-    } else if(snake_segment.direction == "down") {
-        if(head_or_tail == "head") {
-            snake_segment.height += traversed_distance;
-        } else if(head_or_tail == "both") {
-            snake_segment.y += traversed_distance;
-        } else {
-            snake_segment.y += traversed_distance;
-            snake_segment.height -= traversed_distance;
-        }
-    } else if(snake_segment.direction == "left") {
-        if(head_or_tail == "head") {
-            snake_segment.x -= traversed_distance;
-            snake_segment.width += traversed_distance;
-        } else if(head_or_tail == "both") {
-            snake_segment.x -= traversed_distance;
-        } else {
-            snake_segment.width -= traversed_distance;
-        }
-    } else if(snake_segment.direction == "right") {
-        if(head_or_tail == "head") {
-            snake_segment.width += traversed_distance;
-        } else if(head_or_tail == "both") {
-            snake_segment.x += traversed_distance;
-        } else {
-            snake_segment.x += traversed_distance;
-            snake_segment.width -= traversed_distance;
-        }
-    }
-}
-
 //TODO this function should be called start_game and should be called before the main loop
 function restart_game() {
     edible_block = create_edible_block();
@@ -222,24 +180,23 @@ function next_level() {
     snake.speed += 0.1 * initial_snake_speed;
 }
 
-function move_snake_head_and_tail(snake, traversed_distance) {
-    if(snake.segments.length > 1) {
-        move_snake_segment(snake.segments[0],
-                           "head",
-                           traversed_distance);
-        move_snake_segment(snake.segments[snake.segments.length - 1],
-                           "tail",
-                           traversed_distance);
-        tail_width  = snake.segments[snake.segments.length - 1].width;
-        tail_height = snake.segments[snake.segments.length - 1].height;
-        if(tail_width <= 0 || tail_height <= 0) {
-            snake.segments.pop();
-        }
-    } else {
-        move_snake_segment(snake.segments[0],
-                           "both",
-                           traversed_distance);
+function move_head(snake, distance) {
+    snake_head = snake.segments[0];
+    if(snake_head.direction == "up") {
+        snake_head.y -= distance;
+        snake_head.height += distance;
+    } else if(snake_head.direction == "down") {
+        snake_head.height += distance;
+    } else if(snake_head.direction == "left") {
+        snake_head.x -= distance;
+        snake_head.width += distance;
+    } else if(snake_head.direction == "right") {
+        snake_head.width += distance;
     }
+}
+
+function move_tail(snake, distance) {
+    snake_tail = snake.segments[snake.segments.length - 1];
 }
 
 function move_snake() {
@@ -267,7 +224,8 @@ function move_snake() {
                                                         move.direction));
         }
         traversed_distance = (move.time - start_time) * snake.speed;
-        move_snake_head_and_tail(snake, traversed_distance);
+        move_head(snake, traversed_distance);
+        move_tail(snake);
         start_time = move.time;
     });
     move_buffer = [];
