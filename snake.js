@@ -1,6 +1,4 @@
 require(['underscore-min'], function() {
-    console.log(_.map([1, 2, 3], function(num){ return num * 3; }));
-
     colors = {canvas:       "#d3e3a8",
               snake:        "#000000",
               wall:         "#000000",
@@ -90,12 +88,8 @@ require(['underscore-min'], function() {
     }
 
     function collision_with_snake(rectangle) {
-        snake.segments.forEach(function(segment) {
-            if(collision(rectangle, segment)) {
-                return true;
-            }
-        });
-        return false;
+        return _.some(_.map(snake.segments,
+                            function(segment) { return collision(segment, rectangle); }));
     }
 
     snake = create_snake(canvas.width  / 2,
@@ -156,17 +150,21 @@ require(['underscore-min'], function() {
     }
 
     function collision(block1, block2) {
+        function first_in_second(block1_coordinates, block2_coordinates) {
+            return _.some(_.map(_.values(block1_coordinates),
+                                function(block1_coordinate) {
+                                    return block1_coordinate.x >= block2_coordinates.upper_left.x  &&
+                                           block1_coordinate.x <= block2_coordinates.upper_right.x &&
+                                           block1_coordinate.y >= block2_coordinates.upper_left.y  &&
+                                           block1_coordinate.y <= block2_coordinates.lower_left.y;
+                                }));
+        }
+
         block1_coordinates = get_coordinates(block1);
         block2_coordinates = get_coordinates(block2);
-        for(coordinate in block1_coordinates) {
-            if(block1_coordinates[coordinate].x > block2_coordinates.upper_left.x  &&
-               block1_coordinates[coordinate].x < block2_coordinates.upper_right.x &&
-               block1_coordinates[coordinate].y > block2_coordinates.upper_left.y  &&
-               block1_coordinates[coordinate].y < block2_coordinates.lower_left.y) {
-                return true;
-            }
-        }
-        return false;
+
+        return first_in_second(block1_coordinates, block2_coordinates) ||
+               first_in_second(block2_coordinates, block1_coordinates);
     }
 
     //TODO this function should be called start_game and should be called before the main loop
