@@ -1,0 +1,32 @@
+{
+  "name": "Snake",
+  "version": "1.0.0",
+  "description": "html5 canvas snake game",
+  "main": "require.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NerdcoreSteve/Snake.git"
+  },
+  "keywords": [
+    "html5",
+    "canvas",
+    "snake",
+    "game"
+  ],
+  "author": "Steve Smith",
+  "license": "GNU Affero",
+  "bugs": {
+    "url": "https://github.com/NerdcoreSteve/Snake/issues"
+  },
+  "homepage": "https://github.com/NerdcoreSteve/Snake",
+  "dependencies": {
+    "express": "^4.11.1"
+  },
+  "engines": {
+    "node": "0.10.34"
+  }
+}
