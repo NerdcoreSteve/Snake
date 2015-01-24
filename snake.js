@@ -1,4 +1,4 @@
-define(['underscore-min'], function() {
+require(['underscore-min'], function() {
     console.log(_.map([1, 2, 3], function(num){ return num * 3; }));
 
     colors = {canvas:       "#d3e3a8",
