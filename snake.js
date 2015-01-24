@@ -6,7 +6,7 @@ require(['underscore-min'], function() {
 
     number_of_top_blocks  = 30;
     number_of_side_blocks = 15;
-    minimal_fractional_distance_from_snake_head = 0.4;
+    edible_block_minimal_fractional_distance_from_snake_head = 0.3;
     edible_block_minimal_fractional_distance_from_walls = 0.1;
 
     canvas = document.getElementById("canvas");
@@ -100,6 +100,13 @@ require(['underscore-min'], function() {
                          initial_snake_speed,
                          colors.snake);
 
+    function block_is_far_enough_from_snake(block, snake, minimal_fractional_distance) {
+        minimum_distance = edible_block_minimal_fractional_distance_from_snake_head * canvas.height;
+        snake_head = _.first(snake.segments)
+        return Math.abs(block.x - snake_head.x) >= minimum_distance &&
+               Math.abs(block.y - snake_head.y) >= minimum_distance;
+    }
+
     function create_edible_block() {
         width_height = canvas.width / 40;
 
@@ -111,7 +118,6 @@ require(['underscore-min'], function() {
         //TODO should be calculated with a function that takes a fraction
         //     use width or height, whichever is shortest
         //edible_block_minimum_distance_in_fraction_of_canvas_height
-        minimum_distance_from_snake_head = minimal_fractional_distance_from_snake_head * canvas.height;
         minimum_distance_from_walls = edible_block_minimal_fractional_distance_from_walls
                                       * canvas.height;
 
@@ -121,15 +127,15 @@ require(['underscore-min'], function() {
         while(!good_spot) {
             x = random_number(upper_left_x, lower_right_x);
             y = random_number(upper_left_y, lower_right_y);
+            block = {x: x, y: y, width: width_height, height: width_height};
             if(x > upper_left_x + minimum_distance_from_walls  &&
                x < lower_right_x - minimum_distance_from_walls &&
                y > upper_left_y + minimum_distance_from_walls  &&
                y < lower_right_y - minimum_distance_from_walls &&
-               (x < snake.segments[0].x + minimum_distance_from_snake_head ||
-                x > snake.segments[0].x + snake.segments[0].width + minimum_distance_from_snake_head) &&
-               (y < snake.segments[0].y + minimum_distance_from_snake_head ||
-                y > snake.segments[0].y + snake.segments[0].height + minimum_distance_from_snake_head) &&
-               (!collision_with_snake({x: x, y: y, width: width_height, height: width_height}))) {
+               block_is_far_enough_from_snake(block, snake,
+                                              edible_block_minimal_fractional_distance_from_snake_head
+                                                  * canvas.height) &&
+               !collision_with_snake(block)) {
                 good_spot = true;
             }
         }
