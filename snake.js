@@ -6,7 +6,8 @@ require(['underscore-min'], function() {
 
     number_of_top_blocks  = 30;
     number_of_side_blocks = 15;
-    edible_block_minimum_distance_in_fraction_of_canvas_height = 0.3;
+    minimal_fractional_distance_from_snake_head = 0.4;
+    edible_block_minimal_fractional_distance_from_walls = 0.1;
 
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
@@ -109,7 +110,10 @@ require(['underscore-min'], function() {
 
         //TODO should be calculated with a function that takes a fraction
         //     use width or height, whichever is shortest
-        minimum_distance = edible_block_minimum_distance_in_fraction_of_canvas_height * canvas.height;
+        //edible_block_minimum_distance_in_fraction_of_canvas_height
+        minimum_distance_from_snake_head = minimal_fractional_distance_from_snake_head * canvas.height;
+        minimum_distance_from_walls = edible_block_minimal_fractional_distance_from_walls
+                                      * canvas.height;
 
         x = 0;
         y = 0;
@@ -117,12 +121,14 @@ require(['underscore-min'], function() {
         while(!good_spot) {
             x = random_number(upper_left_x, lower_right_x);
             y = random_number(upper_left_y, lower_right_y);
-            if(x > upper_left_x + minimum_distance && x < lower_right_x - minimum_distance &&
-               y > upper_left_y + minimum_distance && y < lower_right_y - minimum_distance &&
-               (x < snake.segments[0].x + minimum_distance ||
-                x > snake.segments[0].x + snake.segments[0].width + minimum_distance) &&
-               (y < snake.segments[0].y + minimum_distance ||
-                y > snake.segments[0].y + snake.segments[0].height + minimum_distance) &&
+            if(x > upper_left_x + minimum_distance_from_walls  &&
+               x < lower_right_x - minimum_distance_from_walls &&
+               y > upper_left_y + minimum_distance_from_walls  &&
+               y < lower_right_y - minimum_distance_from_walls &&
+               (x < snake.segments[0].x + minimum_distance_from_snake_head ||
+                x > snake.segments[0].x + snake.segments[0].width + minimum_distance_from_snake_head) &&
+               (y < snake.segments[0].y + minimum_distance_from_snake_head ||
+                y > snake.segments[0].y + snake.segments[0].height + minimum_distance_from_snake_head) &&
                (!collision_with_snake({x: x, y: y, width: width_height, height: width_height}))) {
                 good_spot = true;
             }
