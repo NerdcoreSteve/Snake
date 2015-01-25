@@ -321,6 +321,7 @@ require(['underscore-min'], function() {
 
     window.onkeydown = function(e) {
         e = e || window.event;
+        e.preventDefault();
         if(e.keyCode == '38') {
             move_buffer.unshift({direction: "up", time: new Date().getTime()});
         } else if(e.keyCode == '40') {
