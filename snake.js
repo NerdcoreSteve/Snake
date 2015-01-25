@@ -259,24 +259,7 @@ require(['underscore-min'], function() {
     }
 
     function snake_eats_tail(snake) {
-        function tail(snake, reasonable_distance_from_head) {
-            head = _.first(snake.segments);
-            tail = snake.segments.slice(2);
-            console.log(_.first(tail));
-            console.log(head.x);
-            /*
-            while(_.size(tail) > 0) {
-                tail_top = _.first(tail);
-                if(Math.abs(head.x - tail_top.x) < reasonable_distance_from_head &&
-                   Math.abs(head.y - tail_top.y) < reasonable_distance_from_head) {
-                    tail = _.rest(tail);
-                }
-            }
-            */
-            return tail;
-        }
-
-        return _.some(_.map(tail(snake, snake.head_width),
+        return _.some(_.map(snake.segments.slice(2),
                             function(tail_segment) {
                                 return collision(_.first(snake.segments),
                                                  tail_segment);
@@ -310,18 +293,18 @@ require(['underscore-min'], function() {
             traversed_distance = (move.time - start_time) * snake.speed;
             move_head(snake, traversed_distance);
             shrink_tail(snake, get_snake_length(snake) - snake.length);
+
+            if(collision(edible_block, snake.segments[0])) {
+                next_level();
+            }
+
+            if(snake_hits_wall(snake, walls) || snake_eats_tail(snake)) {
+                restart_game();
+            }
+
             start_time = move.time;
         });
         move_buffer = [];
-
-        if(collision(edible_block, snake.segments[0])) {
-            next_level();
-        }
-
-        if(snake_hits_wall(snake, walls) || snake_eats_tail(snake)) {
-            restart_game();
-        }
-
     }
 
     function draw_snake() {
