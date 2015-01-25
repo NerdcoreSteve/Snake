@@ -258,12 +258,25 @@ require(['underscore-min'], function() {
                             }));
     }
 
-    function get_snake_tail(snake) {
-        return snake.segments.slice(2);
-    }
-
     function snake_eats_tail(snake) {
-        return _.some(_.map(get_snake_tail(snake),
+        function tail(snake, reasonable_distance_from_head) {
+            head = _.first(snake.segments);
+            tail = snake.segments.slice(2);
+            console.log(_.first(tail));
+            console.log(head.x);
+            /*
+            while(_.size(tail) > 0) {
+                tail_top = _.first(tail);
+                if(Math.abs(head.x - tail_top.x) < reasonable_distance_from_head &&
+                   Math.abs(head.y - tail_top.y) < reasonable_distance_from_head) {
+                    tail = _.rest(tail);
+                }
+            }
+            */
+            return tail;
+        }
+
+        return _.some(_.map(tail(snake, snake.head_width),
                             function(tail_segment) {
                                 return collision(_.first(snake.segments),
                                                  tail_segment);
