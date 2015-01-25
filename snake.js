@@ -17,7 +17,7 @@ require(['underscore-min'], function() {
     move_buffer = [];
     start_time = new Date().getTime();
 
-    wall_blocks = [];
+    walls = [];
     wall_block_width = canvas.width / number_of_top_blocks;
     wall_block_height = canvas.height / number_of_side_blocks;
 
@@ -46,7 +46,7 @@ require(['underscore-min'], function() {
 
     function create_wall(start, end, x_function, y_function) {
         for(i = start; i < end; i++) {
-            wall_blocks.push(create_wall_block(x_function(i), y_function(i)));
+            walls.push(create_wall_block(x_function(i), y_function(i)));
         }
     }
 
@@ -155,7 +155,7 @@ require(['underscore-min'], function() {
     }
 
     function draw_wall() {
-        _.each(wall_blocks, function(wall_block) {
+        _.each(walls, function(wall_block) {
             context.fillStyle = wall_block.color;
             context.fillRect(wall_block.x, wall_block.y, wall_block.width, wall_block.height);
         });
@@ -250,6 +250,26 @@ require(['underscore-min'], function() {
         }
     }
 
+    function snake_hits_wall(snake, walls) {
+        return _.some(_.map(walls,
+                            function(wall) {
+                                return collision(_.first(snake.segments),
+                                                 wall);
+                            }));
+    }
+
+    function get_snake_tail(snake) {
+        return snake.segments.slice(2);
+    }
+
+    function snake_eats_tail(snake) {
+        return _.some(_.map(get_snake_tail(snake),
+                            function(tail_segment) {
+                                return collision(_.first(snake.segments),
+                                                 tail_segment);
+                            }));
+    }
+
     function move_snake() {
         opposite = {"left" : "right",
                     "right": "left",
@@ -285,17 +305,10 @@ require(['underscore-min'], function() {
             next_level();
         }
 
-        wall_blocks.forEach(function(wall_block) {
-            if(collision(snake.segments[0], wall_block)) {
-                restart_game();
-            }
-        });
+        if(snake_hits_wall(snake, walls) || snake_eats_tail(snake)) {
+            restart_game();
+        }
 
-        snake.segments.slice(2).forEach(function(segment) {
-            if(collision(snake.segments[0], segment)) {
-                restart_game();
-            }
-        });
     }
 
     function draw_snake() {
