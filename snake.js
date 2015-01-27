@@ -15,7 +15,7 @@ require(['underscore-min'], function() {
     context.canvas.height = window.innerHeight;
 
     move_buffer = [];
-    start_time = new Date().getTime();
+    start_time = _.now();
 
     walls = [];
     wall_block_width = canvas.width / number_of_top_blocks;
@@ -272,7 +272,7 @@ require(['underscore-min'], function() {
                     "up"   : "down",
                     "down" : "up"};
 
-        move_buffer.unshift({direction: snake.segments[0].direction, time: new Date().getTime()});
+        move_buffer.unshift({direction: snake.segments[0].direction, time: _.now()});
 
         move_buffer.forEach(function(move) {
             if(move.direction != opposite[snake.segments[0].direction] &&
@@ -319,11 +319,15 @@ require(['underscore-min'], function() {
         context.fillRect(edible_block.x, edible_block.y, edible_block.width, edible_block.width);
     }
 
+    paused = false;
+
     (function draw_next_frame() {
         blank_out_canvas();
         draw_wall();
         draw_edible_block();
-        move_snake();
+        if(!paused) {
+            move_snake();
+        }
         draw_snake();
         requestAnimationFrame(draw_next_frame);
     })();
@@ -331,14 +335,25 @@ require(['underscore-min'], function() {
     window.onkeydown = function(e) {
         e = e || window.event;
         e.preventDefault();
-        if(e.keyCode == '38') {
-            move_buffer.unshift({direction: "up", time: new Date().getTime()});
-        } else if(e.keyCode == '40') {
-            move_buffer.unshift({direction: "down", time: new Date().getTime()});
-        } else if(e.keyCode == '37') {
-            move_buffer.unshift({direction: "left", time: new Date().getTime()});
-        } else if(e.keyCode == '39') {
-            move_buffer.unshift({direction: "right", time: new Date().getTime()});
+
+        if(e.keyCode == '32') {
+            if(paused) {
+                paused = false;
+            } else {
+                paused = true;
+            }
+        }
+
+        if(!paused) {
+            if(e.keyCode == '38') {
+                move_buffer.unshift({direction: "up", time: _.now()});
+            } else if(e.keyCode == '40') {
+                move_buffer.unshift({direction: "down", time: _.now()});
+            } else if(e.keyCode == '37') {
+                move_buffer.unshift({direction: "left", time: _.now()});
+            } else if(e.keyCode == '39') {
+                move_buffer.unshift({direction: "right", time: _.now()});
+            }
         }
     }
 });
