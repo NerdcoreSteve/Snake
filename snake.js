@@ -1,4 +1,4 @@
-require(['underscore-min'], function() {
+require(['underscore-min', 'jquery-2.1.3.min'], function() {
     colors = {canvas:       "#d3e3a8",
               snake:        "#000000",
               wall:         "#000000",
