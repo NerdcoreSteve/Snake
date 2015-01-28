@@ -275,31 +275,33 @@ require(['underscore-min'], function() {
         move_buffer.unshift({direction: snake.segments[0].direction, time: _.now()});
 
         move_buffer.forEach(function(move) {
-            if(move.direction != opposite[snake.segments[0].direction] &&
-               move.direction != snake.segments[0].direction) {
-                x = snake.segments[0].x;
-                y = snake.segments[0].y;
-                if(snake.segments[0].direction == "right") {
-                    x = snake.segments[0].x + snake.segments[0].width - snake.head_width;
-                } else if(snake.segments[0].direction == "down") {
-                    y = snake.segments[0].y + snake.segments[0].height - snake.head_width;
+            if(move.direction != "none") {
+                if(move.direction != opposite[snake.segments[0].direction] &&
+                   move.direction != snake.segments[0].direction) {
+                    x = snake.segments[0].x;
+                    y = snake.segments[0].y;
+                    if(snake.segments[0].direction == "right") {
+                        x = snake.segments[0].x + snake.segments[0].width - snake.head_width;
+                    } else if(snake.segments[0].direction == "down") {
+                        y = snake.segments[0].y + snake.segments[0].height - snake.head_width;
+                    }
+                    snake.segments.unshift(create_snake_segment(x,
+                                                                y,
+                                                                snake.head_width,
+                                                                snake.head_width,
+                                                                move.direction));
                 }
-                snake.segments.unshift(create_snake_segment(x,
-                                                            y,
-                                                            snake.head_width,
-                                                            snake.head_width,
-                                                            move.direction));
-            }
-            traversed_distance = (move.time - start_time) * snake.speed;
-            move_head(snake, traversed_distance);
-            shrink_tail(snake, get_snake_length(snake) - snake.length);
+                traversed_distance = (move.time - start_time) * snake.speed;
+                move_head(snake, traversed_distance);
+                shrink_tail(snake, get_snake_length(snake) - snake.length);
 
-            if(collision(edible_block, snake.segments[0])) {
-                next_level();
-            }
+                if(collision(edible_block, snake.segments[0])) {
+                    next_level();
+                }
 
-            if(snake_hits_wall(snake, walls) || snake_eats_tail(snake)) {
-                restart_game();
+                if(snake_hits_wall(snake, walls) || snake_eats_tail(snake)) {
+                    restart_game();
+                }
             }
 
             start_time = move.time;
@@ -325,13 +327,12 @@ require(['underscore-min'], function() {
         blank_out_canvas();
         draw_wall();
         draw_edible_block();
-        if(!paused) {
-            move_snake();
-        }
+        move_snake();
         draw_snake();
         requestAnimationFrame(draw_next_frame);
     })();
 
+    last_non_none_direction = "right";
     window.onkeydown = function(e) {
         e = e || window.event;
         e.preventDefault();
@@ -339,20 +340,29 @@ require(['underscore-min'], function() {
         if(e.keyCode == '32') {
             if(paused) {
                 paused = false;
+                move_buffer.unshift({direction: last_non_none_direction,
+                                     time: _.now()});
+                _.first(snake.segments).direction = last_non_none_direction;
             } else {
                 paused = true;
+                move_buffer.unshift({direction: "none", time: _.now()});
+                _.first(snake.segments).direction = "none";
             }
         }
 
         if(!paused) {
             if(e.keyCode == '38') {
                 move_buffer.unshift({direction: "up", time: _.now()});
+                last_non_none_direction = "up";
             } else if(e.keyCode == '40') {
                 move_buffer.unshift({direction: "down", time: _.now()});
+                last_non_none_direction = "down";
             } else if(e.keyCode == '37') {
                 move_buffer.unshift({direction: "left", time: _.now()});
+                last_non_none_direction = "left";
             } else if(e.keyCode == '39') {
                 move_buffer.unshift({direction: "right", time: _.now()});
+                last_non_none_direction = "right";
             }
         }
     }
