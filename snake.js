@@ -333,21 +333,25 @@ require(['underscore-min'], function() {
     })();
 
     last_non_none_direction = "right";
+    function toggle_pause() {
+        if(paused) {
+            paused = false;
+            move_buffer.unshift({direction: last_non_none_direction,
+                                 time: _.now()});
+            _.first(snake.segments).direction = last_non_none_direction;
+        } else {
+            paused = true;
+            move_buffer.unshift({direction: "none", time: _.now()});
+            _.first(snake.segments).direction = "none";
+        }
+    }
+
     window.onkeydown = function(e) {
         e = e || window.event;
         e.preventDefault();
 
         if(e.keyCode == '32') {
-            if(paused) {
-                paused = false;
-                move_buffer.unshift({direction: last_non_none_direction,
-                                     time: _.now()});
-                _.first(snake.segments).direction = last_non_none_direction;
-            } else {
-                paused = true;
-                move_buffer.unshift({direction: "none", time: _.now()});
-                _.first(snake.segments).direction = "none";
-            }
+            toggle_pause();
         }
 
         if(!paused) {
@@ -366,4 +370,12 @@ require(['underscore-min'], function() {
             }
         }
     }
+
+    document.addEventListener("visibilitychange", function() {
+                                                      console.log("hello?");
+                                                      if (!paused && document.hidden) {
+                                                          toggle_pause();
+                                                      }
+                                                  },
+                                                  false);
 });
