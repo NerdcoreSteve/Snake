@@ -107,13 +107,17 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                Math.abs(block.y - snake_head.y) >= minimum_distance;
     }
 
+    //TODO shouldn't I just use get_coordinates?
+    function get_board_boundaries(width_height) {
+        return {upper_left_x:  wall_block_width,
+                upper_left_y:  wall_block_width,
+                lower_right_x: canvas.width  - wall_block_width  - width_height,
+                lower_right_y: canvas.height - wall_block_height - width_height};
+    }
+
     function create_edible_block() {
         width_height = canvas.width / 40;
-
-        upper_left_x  = wall_block_width;
-        upper_left_y  = wall_block_width;
-        lower_right_x = canvas.width  - wall_block_width  - width_height;
-        lower_right_y = canvas.height - wall_block_height - width_height;
+        boundaries = get_board_boundaries(width_height);
 
         //TODO should be calculated with a function that takes a fraction
         //     use width or height, whichever is shortest
@@ -125,13 +129,13 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         y = 0;
         good_spot = false;
         while(!good_spot) {
-            x = random_number(upper_left_x, lower_right_x);
-            y = random_number(upper_left_y, lower_right_y);
+            x = random_number(boundaries.upper_left_x, boundaries.lower_right_x);
+            y = random_number(boundaries.upper_left_y, boundaries.lower_right_y);
             block = {x: x, y: y, width: width_height, height: width_height};
-            if(x > upper_left_x + minimum_distance_from_walls  &&
-               x < lower_right_x - minimum_distance_from_walls &&
-               y > upper_left_y + minimum_distance_from_walls  &&
-               y < lower_right_y - minimum_distance_from_walls &&
+            if(x > boundaries.upper_left_x  + minimum_distance_from_walls &&
+               x < boundaries.lower_right_x - minimum_distance_from_walls &&
+               y > boundaries.upper_left_y  + minimum_distance_from_walls &&
+               y < boundaries.lower_right_y - minimum_distance_from_walls &&
                block_is_far_enough_from_snake(block, snake,
                                               edible_block_minimal_fractional_distance_from_snake_head
                                                   * canvas.height) &&
@@ -250,12 +254,24 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         }
     }
 
+    function snake_off_board(snake) {
+        //TODO using a block's width in this way doesn't quite work.
+        //     but it works for this application.
+        boundaries = get_board_boundaries(snake.head_width);
+        snake_head = _.first(snake.segments);
+        return snake_head.x < boundaries.upper_left_x  ||
+               snake_head.x > boundaries.lower_right_x ||
+               snake_head.y < boundaries.upper_left_y  ||
+               snake_head.y > boundaries.lower_right_y;
+    }
+
     function snake_hits_wall(snake, walls) {
         return _.some(_.map(walls,
                             function(wall) {
                                 return collision(_.first(snake.segments),
                                                  wall);
-                            }));
+                            }))
+               || snake_off_board(snake);
     }
 
     function snake_eats_tail(snake) {
@@ -370,16 +386,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
             }
         }
     }
-
-    $(window).blur(function(){
-        if(!paused) {
-            toggle_pause();
-        }
-    });
-
-    $(window).focus(function(){
-        $(document).focus();
-    });
 
     $("canvas").click(function() {
         restart_game();
