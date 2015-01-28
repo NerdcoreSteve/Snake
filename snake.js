@@ -376,4 +376,12 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
             toggle_pause();
         }
     });
+
+    $(window).focus(function(){
+        $(document).focus();
+    });
+
+    $("canvas").click(function() {
+        restart_game();
+    });
 });
