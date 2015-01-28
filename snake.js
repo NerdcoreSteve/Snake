@@ -371,11 +371,9 @@ require(['underscore-min'], function() {
         }
     }
 
-    document.addEventListener("visibilitychange", function() {
-                                                      console.log("hello?");
-                                                      if (!paused && document.hidden) {
-                                                          toggle_pause();
-                                                      }
-                                                  },
-                                                  false);
+    $(window).blur(function(){
+        if(!paused) {
+            toggle_pause();
+        }
+    });
 });
