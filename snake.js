@@ -28,7 +28,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
     initial_snake_speed = yard_stick / 6000;
 
-    var score, paused, last_non_none_direction, edible_block, snake;
+    var score = 0, last_score, paused, last_non_none_direction, edible_block, snake;
     new_game();
 
     (function game_loop() {
@@ -75,6 +75,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function new_game() {
+        last_score = score;
         score = 0;
         paused = true;
         last_non_none_direction = "right";
@@ -368,7 +369,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
         context.fillStyle = colors.pause_modal_stroke;
 
-        text_height = modal.height / 17;
+        text_height = modal.height / 20;
         text_padding = text_height / 3;
         context.font = Math.floor(text_height) + "px Arial";
 
@@ -377,6 +378,9 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
         text.y += text_height + text_padding;
         context.fillText("Current Score: " + score, text.x, text.y);
+
+        text.y += text_height + text_padding;
+        context.fillText("Last game's score: " + last_score, text.x, text.y);
 
         text.y += text_height + text_padding;
         context.fillText("Press space to start, pause, or unpause", text.x, text.y);
