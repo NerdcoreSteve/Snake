@@ -1,4 +1,7 @@
 require(['underscore-min', 'jquery-2.1.3.min'], function() {
+    score = 0;
+    paused = true;
+
     colors = {canvas:           "#d3e3a8",
               snake:            "#000000",
               wall:             "#000000",
@@ -76,7 +79,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
     snake = create_snake(canvas.width  / 2,
                          canvas.height / 2,
-                         "right",
+                         "none",
                          canvas.width / 40,
                          initial_snake_speed,
                          colors.snake);
@@ -164,12 +167,15 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                first_in_second(block2_coordinates, block1_coordinates);
     }
 
-    //TODO this function should be called start_game and should be called before the main loop
+    //TODO this function should be called new_game and should be called before the main loop
     function restart_game() {
+        score = 0;
+        paused = true;
+        last_non_none_direction = "right";
         edible_block = create_edible_block();
         snake = create_snake(canvas.width  / 2,
                              canvas.height / 2,
-                             "right",
+                             "none",
                              canvas.width / 40,
                              initial_snake_speed,
                              colors.snake);
@@ -179,6 +185,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         edible_block = create_edible_block();
         snake.speed += 0.1 * initial_snake_speed;
         snake.length += snake.head_width;
+        score++;
     }
 
     function move_head(snake, distance) {
@@ -322,18 +329,40 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         context.fillStyle = colors.pause_modal_fill;
         context.strokeStyle = colors.pause_modal_stroke;
         context.lineWidth = canvas.width / 60;
-        padding = canvas.width / 10;
-        context.fillRect(padding,
-                         padding,
-                         canvas.width  - 2 * padding,
-                         canvas.height - 2 * padding);
-        context.strokeRect(padding,
-                           padding,
-                           canvas.width  - 2 * padding,
-                           canvas.height - 2 * padding);
+        modal_padding = canvas.width / 10;
+        context.fillRect(modal_padding,
+                         modal_padding,
+                         canvas.width  - 2 * modal_padding,
+                         canvas.height - 2 * modal_padding);
+        context.strokeRect(modal_padding,
+                           modal_padding,
+                           canvas.width  - 2 * modal_padding,
+                           canvas.height - 2 * modal_padding);
+
+        context.fillStyle = colors.pause_modal_stroke;
+        text_padding = modal_padding + canvas.width / 30;
+        text_height = Math.floor(canvas.width / 25);
+        context.font = text_height + "px Arial";
+
+        text_position = 1.15 * text_padding;
+        context.fillText("Professional Snake!", text_padding, text_position);
+
+        text_position += 1.3 * text_height;
+        context.fillText("Current Score: " + score, text_padding, text_position);
+
+        text_position += 1.3 * text_height;
+        context.fillText("Press space to start, pause, or unpause", text_padding, text_position);
+
+        text_position += 1.3 * text_height;
+        context.fillText("Click on screen (while unpaused) to restart", text_padding, text_position);
+
+        text_position += 1.3 * text_height;
+        context.fillText("This game was made by Steve Smith:", text_padding, text_position);
+
+        text_position += 1.3 * text_height;
+        context.fillText("professionalsteve.com", text_padding, text_position);
     }
 
-    paused = true;
     (function draw_next_frame() {
         blank_out_canvas();
         draw_wall();
@@ -386,6 +415,8 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     $("canvas").click(function() {
-        restart_game();
+        if(!paused) {
+            restart_game();
+        }
     });
 });
