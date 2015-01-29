@@ -1,8 +1,10 @@
 require(['underscore-min', 'jquery-2.1.3.min'], function() {
-    colors = {canvas:       "#d3e3a8",
-              snake:        "#000000",
-              wall:         "#000000",
-              edible_block: "#000000"};
+    colors = {canvas:           "#d3e3a8",
+              snake:            "#000000",
+              wall:             "#000000",
+              edible_block:     "#000000",
+              pause_modal_fill:   "#d3e3a8",
+              pause_modal_stroke: "#000000"};
 
     edible_block_minimal_fractional_distance_from_snake_head = 0.3;
     edible_block_minimal_fractional_distance_from_walls = 0.1;
@@ -316,14 +318,31 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         context.fillRect(edible_block.x, edible_block.y, edible_block.width, edible_block.width);
     }
 
-    paused = false;
+    function draw_pause_modal() {
+        context.fillStyle = colors.pause_modal_fill;
+        context.strokeStyle = colors.pause_modal_stroke;
+        context.lineWidth = canvas.width / 60;
+        padding = canvas.width / 10;
+        context.fillRect(padding,
+                         padding,
+                         canvas.width  - 2 * padding,
+                         canvas.height - 2 * padding);
+        context.strokeRect(padding,
+                           padding,
+                           canvas.width  - 2 * padding,
+                           canvas.height - 2 * padding);
+    }
 
+    paused = true;
     (function draw_next_frame() {
         blank_out_canvas();
         draw_wall();
         draw_edible_block();
         move_snake();
         draw_snake();
+        if(paused) {
+            draw_pause_modal();
+        }
         requestAnimationFrame(draw_next_frame);
     })();
 
