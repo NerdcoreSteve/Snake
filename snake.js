@@ -33,7 +33,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     snake = create_snake(canvas.width  / 2,
                          canvas.height / 2,
                          "none",
-                         yard_stick / 25,
+                         yard_stick / 30,
                          initial_snake_speed,
                          colors.snake);
 
@@ -84,7 +84,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         }
     }
 
-    //TODO this function should be called new_game and should be called before the main loop
     function restart_game() {
         score = 0;
         paused = true;
@@ -108,12 +107,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
     function create_wall(x, y, width, height) {
         return create_block(x, y, width, height, colors.wall);
-    }
-
-    function random_number(begining_of_range_inclusive, end_of_range_inclusive) {
-        return Math.floor((Math.random()
-            * (end_of_range_inclusive - begining_of_range_inclusive + 1)) 
-            + begining_of_range_inclusive);
     }
 
     function get_coordinates(block) {
@@ -148,12 +141,11 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
     function block_is_far_enough_from_snake(block, snake, minimal_fractional_distance) {
         minimum_distance = edible_block_minimal_fractional_distance_from_snake_head * yard_stick;
-        snake_head = _.first(snake.segments)
+        snake_head = get_snake_head(snake);
         return Math.abs(block.x - snake_head.x) >= minimum_distance &&
                Math.abs(block.y - snake_head.y) >= minimum_distance;
     }
 
-    //TODO shouldn't we just use get_coordinates?
     function get_board_boundaries(width_height) {
         return {upper_left_x:  wall_short_length,
                 upper_left_y:  wall_short_length,
@@ -162,20 +154,17 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function create_edible_block() {
-        //TODO top line should be a parameter
         width_height = yard_stick / 40;
         boundaries = get_board_boundaries(width_height);
 
-        //TODO should be calculated with a function that takes a fraction
-        //     use width or height, whichever is shortest
         minimum_distance_from_walls = edible_block_minimal_fractional_distance_from_walls
                                       * yard_stick;
 
         good_spot = false;
         var block;
         while(!good_spot) {
-            x = random_number(boundaries.upper_left_x, boundaries.lower_right_x);
-            y = random_number(boundaries.upper_left_y, boundaries.lower_right_y);
+            x = _.random(boundaries.upper_left_x, boundaries.lower_right_x);
+            y = _.random(boundaries.upper_left_y, boundaries.lower_right_y);
             block = create_block(x, y, width_height, width_height, colors.edible_block);
             if(x > boundaries.upper_left_x  + minimum_distance_from_walls &&
                x < boundaries.lower_right_x - minimum_distance_from_walls &&
@@ -230,7 +219,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function move_head(snake, distance) {
-        snake_head = snake.segments[0];
+        snake_head = get_snake_head(snake);
         if(snake_head.direction == "up") {
             snake_head.y -= distance;
             snake_head.height += distance;
@@ -261,33 +250,31 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function shrink_tail(snake, amount) { 
-        snake_tail = snake.segments[snake.segments.length - 1];
-        if(snake_tail.direction == "up") {
-            snake_tail.height -= amount;
-        } else if(snake_tail.direction == "down") {
-            snake_tail.y += amount;
-            snake_tail.height -= amount;
-        } else if(snake_tail.direction == "left") {
-            snake_tail.width -= amount;
-        } else if(snake_tail.direction == "right") {
-            snake_tail.x += amount;
-            snake_tail.width -= amount;
+        snake_tail_end = _.last(snake.segments);
+        if(snake_tail_end.direction == "up") {
+            snake_tail_end.height -= amount;
+        } else if(snake_tail_end.direction == "down") {
+            snake_tail_end.y += amount;
+            snake_tail_end.height -= amount;
+        } else if(snake_tail_end.direction == "left") {
+            snake_tail_end.width -= amount;
+        } else if(snake_tail_end.direction == "right") {
+            snake_tail_end.x += amount;
+            snake_tail_end.width -= amount;
         }
-        if(snake_tail.width <= 0 || snake_tail.height <= 0) {
+        if(snake_tail_end.width <= 0 || snake_tail_end.height <= 0) {
             snake.segments.pop();
-            if(snake_tail.width < 0) {
-                shrink_tail(snake, -1 * snake_tail.width);
-            } else if(snake_tail.height < 0) {
-                shrink_tail(snake, -1 * snake_tail.height);
+            if(snake_tail_end.width < 0) {
+                shrink_tail(snake, -1 * snake_tail_end.width);
+            } else if(snake_tail_end.height < 0) {
+                shrink_tail(snake, -1 * snake_tail_end.height);
             }
         }
     }
 
     function snake_off_board(snake) {
-        //TODO using a block's width in this way doesn't quite work.
-        //     but it works for this application.
         boundaries = get_board_boundaries(snake.head_width);
-        snake_head = _.first(snake.segments);
+        snake_head = get_snake_head(snake);
         return snake_head.x < boundaries.upper_left_x  ||
                snake_head.x > boundaries.lower_right_x ||
                snake_head.y < boundaries.upper_left_y  ||
@@ -295,20 +282,24 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function snake_hits_wall(snake, walls) {
+        snake_head = get_snake_head(snake);
         return _.some(_.map(walls,
                             function(wall) {
-                                return collision(_.first(snake.segments),
-                                                 wall);
+                                return collision(snake_head, wall);
                             }))
                || snake_off_board(snake);
     }
 
     function snake_eats_tail(snake) {
+        snake_head = get_snake_head(snake);
         return _.some(_.map(snake.segments.slice(2),
                             function(tail_segment) {
-                                return collision(_.first(snake.segments),
-                                                 tail_segment);
+                                return collision(snake_head, tail_segment);
                             }));
+    }
+
+    function get_snake_head(snake) {
+        return _.first(snake.segments);
     }
 
     function move_snake() {
@@ -317,18 +308,20 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                     "up"   : "down",
                     "down" : "up"};
 
-        move_buffer.unshift({direction: snake.segments[0].direction, time: _.now()});
+        snake_head = get_snake_head(snake);
+
+        move_buffer.unshift({direction: snake_head.direction, time: _.now()});
 
         move_buffer.forEach(function(move) {
             if(move.direction != "none") {
-                if(move.direction != opposite[snake.segments[0].direction] &&
-                   move.direction != snake.segments[0].direction) {
-                    x = snake.segments[0].x;
-                    y = snake.segments[0].y;
-                    if(snake.segments[0].direction == "right") {
-                        x = snake.segments[0].x + snake.segments[0].width - snake.head_width;
-                    } else if(snake.segments[0].direction == "down") {
-                        y = snake.segments[0].y + snake.segments[0].height - snake.head_width;
+                if(move.direction != opposite[snake_head.direction] &&
+                   move.direction != snake_head.direction) {
+                    x = snake_head.x;
+                    y = snake_head.y;
+                    if(snake_head.direction == "right") {
+                        x = snake_head.x + snake_head.width - snake.head_width;
+                    } else if(snake_head.direction == "down") {
+                        y = snake_head.y + snake_head.height - snake.head_width;
                     }
                     snake.segments.unshift(create_snake_segment(x,
                                                                 y,
@@ -340,7 +333,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                 move_head(snake, traversed_distance);
                 shrink_tail(snake, get_snake_length(snake) - snake.length);
 
-                if(collision(edible_block, snake.segments[0])) {
+                if(collision(edible_block, snake_head)) {
                     next_level();
                 }
 
@@ -409,15 +402,16 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function toggle_pause() {
+        snake_head = get_snake_head(snake);
         if(paused) {
             paused = false;
             move_buffer.unshift({direction: last_non_none_direction,
                                  time: _.now()});
-            _.first(snake.segments).direction = last_non_none_direction;
+            snake_head.direction = last_non_none_direction;
         } else {
             paused = true;
             move_buffer.unshift({direction: "none", time: _.now()});
-            _.first(snake.segments).direction = "none";
+            snake_head.direction = "none";
         }
     }
 });
