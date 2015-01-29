@@ -33,7 +33,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     snake = create_snake(canvas.width  / 2,
                          canvas.height / 2,
                          "none",
-                         yard_stick / 30,
+                         yard_stick / 40,
                          initial_snake_speed,
                          colors.snake);
 
