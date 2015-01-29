@@ -36,7 +36,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     walls.push(create_wall(0, 0, wall_short_length, canvas.height));
     walls.push(create_wall(canvas.width - wall_short_length, 0, wall_short_length, canvas.height));
 
-    initial_snake_speed = 200 / canvas.width;
+    initial_snake_speed = canvas.width / 10000;
 
     function random_number(begining_of_range_inclusive, end_of_range_inclusive) {
         return Math.floor((Math.random()
