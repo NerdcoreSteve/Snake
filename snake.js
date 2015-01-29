@@ -4,8 +4,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
               wall:         "#000000",
               edible_block: "#000000"};
 
-    number_of_top_blocks  = 30;
-    number_of_side_blocks = 15;
     edible_block_minimal_fractional_distance_from_snake_head = 0.3;
     edible_block_minimal_fractional_distance_from_walls = 0.1;
 
@@ -18,8 +16,20 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     start_time = _.now();
 
     walls = [];
-    wall_block_width = canvas.width / number_of_top_blocks;
-    wall_block_height = canvas.height / number_of_side_blocks;
+    wall_short_length = canvas.width / 30;
+
+    function create_wall(x, y, width, height) {
+        return {x:         x, 
+                y:         y, 
+                width:     width,
+                height:    height,
+                color:     colors.wall};
+    }
+
+    walls.push(create_wall(0, 0, canvas.width, wall_short_length));
+    walls.push(create_wall(0, canvas.height - wall_short_length, canvas.width, wall_short_length));
+    walls.push(create_wall(0, 0, wall_short_length, canvas.height));
+    walls.push(create_wall(canvas.width - wall_short_length, 0, wall_short_length, canvas.height));
 
     initial_snake_speed = 200 / canvas.width;
 
@@ -35,37 +45,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                 lower_left:  {x: block.x              , y: block.y +  block.height},
                 lower_right: {x: block.x + block.width, y: block.y +  block.height}};
     }
-
-    function create_wall_block(x, y) {
-        return {x:         x, 
-                y:         y, 
-                width:     wall_block_width,
-                height:    wall_block_height,
-                color:     colors.wall};
-    }
-
-    function create_wall(start, end, x_function, y_function) {
-        for(i = start; i < end; i++) {
-            walls.push(create_wall_block(x_function(i), y_function(i)));
-        }
-    }
-
-    create_wall(0,
-                number_of_top_blocks,
-                function(i) { return i * wall_block_width},
-                function(i) { return 0 });
-    create_wall(0,
-                number_of_top_blocks,
-                function(i) { return i * wall_block_width},
-                function(i) { return canvas.height - wall_block_height });
-    create_wall(1,
-                canvas.height/wall_block_height - 1,
-                function(i) { return 0},
-                function(i) { return i * wall_block_height });
-    create_wall(1,
-                canvas.height/wall_block_height - 1,
-                function(i) { return canvas.width - wall_block_width},
-                function(i) { return i * wall_block_height });
 
     function create_snake_segment(x, y, width, height, direction) {
         return {x:         x, 
@@ -109,10 +88,10 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
     //TODO shouldn't I just use get_coordinates?
     function get_board_boundaries(width_height) {
-        return {upper_left_x:  wall_block_width,
-                upper_left_y:  wall_block_width,
-                lower_right_x: canvas.width  - wall_block_width  - width_height,
-                lower_right_y: canvas.height - wall_block_height - width_height};
+        return {upper_left_x:  wall_short_length,
+                upper_left_y:  wall_short_length,
+                lower_right_x: canvas.width  - wall_short_length  - width_height,
+                lower_right_y: canvas.height - wall_short_length - width_height};
     }
 
     function create_edible_block() {
