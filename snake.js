@@ -2,10 +2,10 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     score = 0;
     paused = true;
 
-    colors = {canvas:           "#d3e3a8",
-              snake:            "#000000",
-              wall:             "#000000",
-              edible_block:     "#000000",
+    colors = {canvas:             "#d3e3a8",
+              snake:              "#000000",
+              wall:               "#000000",
+              edible_block:       "#000000",
               pause_modal_fill:   "#d3e3a8",
               pause_modal_stroke: "#000000"};
 
@@ -23,12 +23,16 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     walls = [];
     wall_short_length = canvas.width / 30;
 
+    function create_block(x, y, width, height, color) {
+        return {x:      x, 
+                y:      y, 
+                width:  width,
+                height: height,
+                color:  color};
+    }
+
     function create_wall(x, y, width, height) {
-        return {x:         x, 
-                y:         y, 
-                width:     width,
-                height:    height,
-                color:     colors.wall};
+        return create_block(x, y, width, height, colors.wall);
     }
 
     walls.push(create_wall(0, 0, canvas.width, wall_short_length));
@@ -52,11 +56,8 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function create_snake_segment(x, y, width, height, direction) {
-        return {x:         x, 
-                y:         y, 
-                width:     width,
-                height:    height,
-                direction: direction};
+        return _.extend(create_block(x, y, width, height, colors.snake),
+                        {direction: direction});
     }
 
     function create_snake(x, y, direction, head_width, speed, color) {
@@ -109,13 +110,13 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         minimum_distance_from_walls = edible_block_minimal_fractional_distance_from_walls
                                       * canvas.height;
 
-        x = 0;
-        y = 0;
+    //function create_block(x, y, width, height, color) {
         good_spot = false;
+        var block;
         while(!good_spot) {
             x = random_number(boundaries.upper_left_x, boundaries.lower_right_x);
             y = random_number(boundaries.upper_left_y, boundaries.lower_right_y);
-            block = {x: x, y: y, width: width_height, height: width_height};
+            block = create_block(x, y, width_height, width_height, colors.edible_block);
             if(x > boundaries.upper_left_x  + minimum_distance_from_walls &&
                x < boundaries.lower_right_x - minimum_distance_from_walls &&
                y > boundaries.upper_left_y  + minimum_distance_from_walls &&
@@ -128,11 +129,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
             }
         }
 
-        return {x:      x,
-                y:      y,
-                width:  width_height,
-                height: width_height,
-                color:  colors.edible_block};
+        return block;
     }
 
     edible_block = create_edible_block();
@@ -330,37 +327,39 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         context.strokeStyle = colors.pause_modal_stroke;
         context.lineWidth = canvas.width / 60;
         modal_padding = canvas.width / 10;
-        context.fillRect(modal_padding,
-                         modal_padding,
-                         canvas.width  - 2 * modal_padding,
-                         canvas.height - 2 * modal_padding);
-        context.strokeRect(modal_padding,
-                           modal_padding,
-                           canvas.width  - 2 * modal_padding,
-                           canvas.height - 2 * modal_padding);
+
+        modal = create_block(modal_padding,
+                             modal_padding,
+                             canvas.width  - 2 * modal_padding,
+                             canvas.height - 2 * modal_padding,
+                             colors.pause_modal_fill);
+
+        context.fillRect(modal.x, modal.y, modal.width, modal.height);
+        context.strokeRect(modal.x, modal.y, modal.width, modal.height);
 
         context.fillStyle = colors.pause_modal_stroke;
-        text_padding = modal_padding + canvas.width / 30;
-        text_height = Math.floor(canvas.width / 25);
-        context.font = text_height + "px Arial";
 
-        text_position = 1.15 * text_padding;
-        context.fillText("Professional Snake!", text_padding, text_position);
+        text_height = modal.height / 17;
+        text_padding = text_height / 3;
+        context.font = Math.floor(text_height) + "px Arial";
 
-        text_position += 1.3 * text_height;
-        context.fillText("Current Score: " + score, text_padding, text_position);
+        text = {x: modal.x + modal.width / 9, y: modal.y + modal.height / 3.5};
+        context.fillText("Professional Snake!", text.x, text.y);
 
-        text_position += 1.3 * text_height;
-        context.fillText("Press space to start, pause, or unpause", text_padding, text_position);
+        text.y += text_height + text_padding;
+        context.fillText("Current Score: " + score, text.x, text.y);
 
-        text_position += 1.3 * text_height;
-        context.fillText("Click on screen (while unpaused) to restart", text_padding, text_position);
+        text.y += text_height + text_padding;
+        context.fillText("Press space to start, pause, or unpause", text.x, text.y);
 
-        text_position += 1.3 * text_height;
-        context.fillText("This game was made by Steve Smith:", text_padding, text_position);
+        text.y += text_height + text_padding;
+        context.fillText("Click on screen (while unpaused) to restart", text.x, text.y);
 
-        text_position += 1.3 * text_height;
-        context.fillText("professionalsteve.com", text_padding, text_position);
+        text.y += text_height + text_padding;
+        context.fillText("This game was made by Steve Smith:", text.x, text.y);
+
+        text.y += text_height + text_padding;
+        context.fillText("professionalsteve.com", text.x, text.y);
     }
 
     (function draw_next_frame() {
