@@ -20,8 +20,83 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     move_buffer = [];
     start_time = _.now();
 
+    yard_stick = _.min([canvas.width, canvas.height]);
+
     walls = [];
-    wall_short_length = canvas.width / 30;
+    wall_short_length = yard_stick / 30;
+    walls.push(create_wall(0, 0, canvas.width, wall_short_length));
+    walls.push(create_wall(0, canvas.height - wall_short_length, canvas.width, wall_short_length));
+    walls.push(create_wall(0, 0, wall_short_length, canvas.height));
+    walls.push(create_wall(canvas.width - wall_short_length, 0, wall_short_length, canvas.height));
+
+    initial_snake_speed = yard_stick / 6000;
+    snake = create_snake(canvas.width  / 2,
+                         canvas.height / 2,
+                         "none",
+                         yard_stick / 25,
+                         initial_snake_speed,
+                         colors.snake);
+
+    edible_block = create_edible_block();
+
+    last_non_none_direction = "right";
+
+    (function game_loop() {
+        blank_out_canvas();
+        draw_wall();
+        draw_edible_block();
+        move_snake();
+        draw_snake();
+        if(paused) {
+            draw_pause_modal();
+        }
+        requestAnimationFrame(game_loop);
+    })();
+
+    $("canvas").click(function() {
+        if(!paused) {
+            restart_game();
+        }
+    });
+
+    window.onkeydown = function(e) {
+        e = e || window.event;
+        e.preventDefault();
+
+        if(e.keyCode == '32') {
+            toggle_pause();
+        }
+
+        if(!paused) {
+            if(e.keyCode == '38') {
+                move_buffer.unshift({direction: "up", time: _.now()});
+                last_non_none_direction = "up";
+            } else if(e.keyCode == '40') {
+                move_buffer.unshift({direction: "down", time: _.now()});
+                last_non_none_direction = "down";
+            } else if(e.keyCode == '37') {
+                move_buffer.unshift({direction: "left", time: _.now()});
+                last_non_none_direction = "left";
+            } else if(e.keyCode == '39') {
+                move_buffer.unshift({direction: "right", time: _.now()});
+                last_non_none_direction = "right";
+            }
+        }
+    }
+
+    //TODO this function should be called new_game and should be called before the main loop
+    function restart_game() {
+        score = 0;
+        paused = true;
+        last_non_none_direction = "right";
+        edible_block = create_edible_block();
+        snake = create_snake(canvas.width  / 2,
+                             canvas.height / 2,
+                             "none",
+                             canvas.width / 40,
+                             initial_snake_speed,
+                             colors.snake);
+    }
 
     function create_block(x, y, width, height, color) {
         return {x:      x, 
@@ -34,13 +109,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     function create_wall(x, y, width, height) {
         return create_block(x, y, width, height, colors.wall);
     }
-
-    walls.push(create_wall(0, 0, canvas.width, wall_short_length));
-    walls.push(create_wall(0, canvas.height - wall_short_length, canvas.width, wall_short_length));
-    walls.push(create_wall(0, 0, wall_short_length, canvas.height));
-    walls.push(create_wall(canvas.width - wall_short_length, 0, wall_short_length, canvas.height));
-
-    initial_snake_speed = canvas.width / 10000;
 
     function random_number(begining_of_range_inclusive, end_of_range_inclusive) {
         return Math.floor((Math.random()
@@ -78,21 +146,14 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                             function(segment) { return collision(segment, rectangle); }));
     }
 
-    snake = create_snake(canvas.width  / 2,
-                         canvas.height / 2,
-                         "none",
-                         canvas.width / 40,
-                         initial_snake_speed,
-                         colors.snake);
-
     function block_is_far_enough_from_snake(block, snake, minimal_fractional_distance) {
-        minimum_distance = edible_block_minimal_fractional_distance_from_snake_head * canvas.height;
+        minimum_distance = edible_block_minimal_fractional_distance_from_snake_head * yard_stick;
         snake_head = _.first(snake.segments)
         return Math.abs(block.x - snake_head.x) >= minimum_distance &&
                Math.abs(block.y - snake_head.y) >= minimum_distance;
     }
 
-    //TODO shouldn't I just use get_coordinates?
+    //TODO shouldn't we just use get_coordinates?
     function get_board_boundaries(width_height) {
         return {upper_left_x:  wall_short_length,
                 upper_left_y:  wall_short_length,
@@ -101,16 +162,15 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     }
 
     function create_edible_block() {
-        width_height = canvas.width / 40;
+        //TODO top line should be a parameter
+        width_height = yard_stick / 40;
         boundaries = get_board_boundaries(width_height);
 
         //TODO should be calculated with a function that takes a fraction
         //     use width or height, whichever is shortest
-        //edible_block_minimum_distance_in_fraction_of_canvas_height
         minimum_distance_from_walls = edible_block_minimal_fractional_distance_from_walls
-                                      * canvas.height;
+                                      * yard_stick;
 
-    //function create_block(x, y, width, height, color) {
         good_spot = false;
         var block;
         while(!good_spot) {
@@ -123,7 +183,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                y < boundaries.lower_right_y - minimum_distance_from_walls &&
                block_is_far_enough_from_snake(block, snake,
                                               edible_block_minimal_fractional_distance_from_snake_head
-                                                  * canvas.height) &&
+                                                  * yard_stick) &&
                !collision_with_snake(block)) {
                 good_spot = true;
             }
@@ -131,8 +191,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
         return block;
     }
-
-    edible_block = create_edible_block();
 
     function blank_out_canvas() {
         context.fillStyle = colors.canvas;
@@ -162,20 +220,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
         return first_in_second(block1_coordinates, block2_coordinates) ||
                first_in_second(block2_coordinates, block1_coordinates);
-    }
-
-    //TODO this function should be called new_game and should be called before the main loop
-    function restart_game() {
-        score = 0;
-        paused = true;
-        last_non_none_direction = "right";
-        edible_block = create_edible_block();
-        snake = create_snake(canvas.width  / 2,
-                             canvas.height / 2,
-                             "none",
-                             canvas.width / 40,
-                             initial_snake_speed,
-                             colors.snake);
     }
 
     function next_level() {
@@ -322,6 +366,8 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         context.fillRect(edible_block.x, edible_block.y, edible_block.width, edible_block.width);
     }
 
+    //All of the numbers in this function are magic.
+    //I figured them out from trial and error.
     function draw_pause_modal() {
         context.fillStyle = colors.pause_modal_fill;
         context.strokeStyle = colors.pause_modal_stroke;
@@ -362,19 +408,6 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         context.fillText("professionalsteve.com", text.x, text.y);
     }
 
-    (function draw_next_frame() {
-        blank_out_canvas();
-        draw_wall();
-        draw_edible_block();
-        move_snake();
-        draw_snake();
-        if(paused) {
-            draw_pause_modal();
-        }
-        requestAnimationFrame(draw_next_frame);
-    })();
-
-    last_non_none_direction = "right";
     function toggle_pause() {
         if(paused) {
             paused = false;
@@ -387,35 +420,4 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
             _.first(snake.segments).direction = "none";
         }
     }
-
-    window.onkeydown = function(e) {
-        e = e || window.event;
-        e.preventDefault();
-
-        if(e.keyCode == '32') {
-            toggle_pause();
-        }
-
-        if(!paused) {
-            if(e.keyCode == '38') {
-                move_buffer.unshift({direction: "up", time: _.now()});
-                last_non_none_direction = "up";
-            } else if(e.keyCode == '40') {
-                move_buffer.unshift({direction: "down", time: _.now()});
-                last_non_none_direction = "down";
-            } else if(e.keyCode == '37') {
-                move_buffer.unshift({direction: "left", time: _.now()});
-                last_non_none_direction = "left";
-            } else if(e.keyCode == '39') {
-                move_buffer.unshift({direction: "right", time: _.now()});
-                last_non_none_direction = "right";
-            }
-        }
-    }
-
-    $("canvas").click(function() {
-        if(!paused) {
-            restart_game();
-        }
-    });
 });
