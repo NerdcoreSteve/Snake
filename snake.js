@@ -1,7 +1,4 @@
 require(['underscore-min', 'jquery-2.1.3.min'], function() {
-    score = 0;
-    paused = true;
-
     colors = {canvas:             "#d3e3a8",
               snake:              "#000000",
               wall:               "#000000",
@@ -30,16 +27,9 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
     walls.push(create_wall(canvas.width - wall_short_length, 0, wall_short_length, canvas.height));
 
     initial_snake_speed = yard_stick / 6000;
-    snake = create_snake(canvas.width  / 2,
-                         canvas.height / 2,
-                         "none",
-                         yard_stick / 40,
-                         initial_snake_speed,
-                         colors.snake);
 
-    edible_block = create_edible_block();
-
-    last_non_none_direction = "right";
+    var score, paused, last_non_none_direction, edible_block, snake;
+    new_game();
 
     (function game_loop() {
         blank_out_canvas();
@@ -55,7 +45,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
 
     $("canvas").click(function() {
         if(!paused) {
-            restart_game();
+            new_game();
         }
     });
 
@@ -84,17 +74,17 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
         }
     }
 
-    function restart_game() {
+    function new_game() {
         score = 0;
         paused = true;
         last_non_none_direction = "right";
-        edible_block = create_edible_block();
         snake = create_snake(canvas.width  / 2,
                              canvas.height / 2,
                              "none",
-                             canvas.width / 40,
+                             yard_stick / 25,
                              initial_snake_speed,
                              colors.snake);
+        edible_block = create_edible_block();
     }
 
     function create_block(x, y, width, height, color) {
@@ -338,7 +328,7 @@ require(['underscore-min', 'jquery-2.1.3.min'], function() {
                 }
 
                 if(snake_hits_wall(snake, walls) || snake_eats_tail(snake)) {
-                    restart_game();
+                    new_game();
                 }
             }
 
